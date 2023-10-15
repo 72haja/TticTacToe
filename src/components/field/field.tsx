@@ -1,17 +1,68 @@
-import { component$ } from "@builder.io/qwik";
+import { $, component$, useSignal } from "@builder.io/qwik";
+import { io } from "socket.io-client";
+import { v4 as uuid } from "uuid";
 
 export default component$(() => {
+  const room = "room1";
+
+  const socket = io("http://localhost:8080", {
+    extraHeaders: {
+      "room": room
+    }
+  });
+
+  const player = uuid();
+  const player2 = useSignal("");
+
+  socket.emit("join", { player, room });
+
+  socket.on("connection", (data) => {
+    console.log("connectionId:", data);
+  });
+
+  socket.on("join", (data) => {
+    console.log("socket.on ~ join:", data, player);
+    if (data.player !== player) {
+      player2.value = data.player;
+    }
+    if(data.players?.length > 1){
+      data.players.find((playerEntry: string) => {
+        if(playerEntry !== player){
+          player2.value = playerEntry;
+          console.log("start game");
+        }
+      })
+    }
+  });
+  // socket.on("game", (data) => {
+  //   console.log("🚀 ~ file: field.tsx:8 ~ socket.on ~ data:", data);
+  //   console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+  // });
+
+  const sendPosition = $((pos: Number) => {
+    // socket.emit("game", { position: pos });
+    console.log("pos:", pos);
+  });
+
   return (
-    <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] max-h-[100%] [&>div]:border [&>div]:border-black [&>div]:flex [&>div]:items-center [&>div]:justify-center">
-      <div>1</div>
-      <div>2</div>
-      <div>3</div>
-      <div>1</div>
-      <div>2</div>
-      <div>3</div>
-      <div>1</div>
-      <div>2</div>
-      <div>3</div>
+    <div class="w-full h-full flex flex-col gap-2">
+      <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] max-h-[100%] [&>button]:border [&>button]:border-gray-600 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:bg-gray-50/20 [&>button]:rounded-none [&>button]:outline-none">
+        <button onClick$={() => (sendPosition(1))}>1</button>
+        <button onClick$={() => (sendPosition(2))}>2</button>
+        <button onClick$={() => (sendPosition(3))}>3</button>
+        <button onClick$={() => (sendPosition(4))}>4</button>
+        <button onClick$={() => (sendPosition(5))}>5</button>
+        <button onClick$={() => (sendPosition(6))}>6</button>
+        <button onClick$={() => (sendPosition(7))}>7</button>
+        <button onClick$={() => (sendPosition(8))}>8</button>
+        <button onClick$={() => (sendPosition(9))}>9</button>
+      </div>
+      <span>
+        player1.value: {player}
+      </span>
+      <span>
+        player2.value: {player2.value}
+      </span>
     </div>
   );
 });
