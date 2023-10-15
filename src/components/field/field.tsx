@@ -1,30 +1,60 @@
 import { $, component$, useSignal } from "@builder.io/qwik";
 import { io } from "socket.io-client";
 
-export default component$(() => {
-  const room = "room1";
+interface SetPositionData {
+  room: string;
+  position: string;
+}
+interface PlayerData {
+  player: string;
+  players?: string[];
+}
 
-  const socket = io("http://localhost:8080", {
-    extraHeaders: {
-      "room": room,
-    },
-  });
+interface GameField {
+  [position: string]: string;
+}
+
+const sessionStoredSocketId = sessionStorage.getItem("socketId")
+  ? sessionStorage.getItem("socketId")
+  : "";
+
+const room = "room1";
+
+export const socket = io("http://localhost:8080", {
+  extraHeaders: {
+    "room": room,
+  },
+});
+
+export default component$(() => {
+  const gameField: GameField = {
+    "0.0": "",
+    "0.1": "",
+    "0.2": "",
+    "1.0": "",
+    "1.1": "",
+    "1.2": "",
+    "2.0": "",
+    "2.1": "",
+    "2.2": "",
+  };
 
   const player = useSignal("");
   const player2 = useSignal("");
 
-  socket.on("connection", (data) => {
+  socket.on("connection", (data: string) => {
     console.log("socket.on ~ data:", data);
     player.value = data;
+    sessionStorage.setItem("socketId", data);
     socket.emit("join", { player: data, room });
   });
 
-  socket.on("join", (data) => {
+  socket.on("join", (data: PlayerData) => {
     console.log("socket.on ~ join:", data, player.value);
     if (data.player !== player.value) {
       player2.value = data.player;
     }
-    if (data.players?.length > 1) {
+    if (data.players && data.players.length > 1) {
       data.players.find((playerEntry: string) => {
         if (playerEntry !== player.value) {
           player2.value = playerEntry;
@@ -33,38 +63,44 @@ export default component$(() => {
       });
     }
   });
-  // socket.on("game", (data) => {
-  //   console.log("🚀 ~ file: field.tsx:8 ~ socket.on ~ data:", data);
-  //   console.log(socket.id); // x8WIv7-mJelg7on_ALbx
-  // });
 
-  socket.on("player-left", (data) => {
+  socket.on("player-left", (data: PlayerData) => {
     if (data.player === player2.value) {
       player2.value = "";
     }
-    alert(`${data.player} left the game`);
   });
 
-  const sendPosition = $((pos: Number) => {
-    // socket.emit("game", { position: pos });
-    console.log("pos:", pos);
+  const sendPosition = $((pos: string) => {
+    const setPositionData: SetPositionData = {
+      room,
+      position: pos,
+    };
+    gameField[pos] = player.value;
+    socket.emit("set-position", setPositionData);
+  });
+
+  socket.on("set-position", (data: any) => {
+    gameField[data.position] = player2.value;
   });
 
   return (
     <div class="w-full h-full flex flex-col gap-2">
       <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] max-h-[100%] [&>button]:border [&>button]:border-gray-600 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:bg-gray-50/20 [&>button]:rounded-none [&>button]:outline-none">
-        <button onClick$={() => (sendPosition(1))}>1</button>
-        <button onClick$={() => (sendPosition(2))}>2</button>
-        <button onClick$={() => (sendPosition(3))}>3</button>
-        <button onClick$={() => (sendPosition(4))}>4</button>
-        <button onClick$={() => (sendPosition(5))}>5</button>
-        <button onClick$={() => (sendPosition(6))}>6</button>
-        <button onClick$={() => (sendPosition(7))}>7</button>
-        <button onClick$={() => (sendPosition(8))}>8</button>
-        <button onClick$={() => (sendPosition(9))}>9</button>
+        {Object.keys(gameField).map((position: string) => {
+          return (
+            <button
+              onClick$={() => (sendPosition(position))}
+              class="w-full h-full"
+              disabled={gameField[position] !== ""}
+              key={position}
+            >
+              {gameField[position]} {position}
+            </button>
+          );
+        })}
       </div>
       <span>
-        player1.value: {player}
+        player1.value: {player.value}
       </span>
       <span>
         player2.value: {player2.value}

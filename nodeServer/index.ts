@@ -10,7 +10,6 @@ const gamePlayers: string[] = [];
 
 io.on('connection', (socket) => {
   console.log('made socket connection', socket.id);
-  console.log('socket', socket.request.headers.room);
 
   const connectionRoom = socket.request.headers.room as string ?? 'default';
   socket.join(connectionRoom);
@@ -35,6 +34,11 @@ io.on('connection', (socket) => {
     gamePlayers.splice(gamePlayers.indexOf(socket.id), 1);
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
   });
+
+  socket.on('set-position', (data: SetPositionData) => {
+    socket.to(connectionRoom).emit('set-position', data);
+  })
+
 })
 
 interface PlayerData {
@@ -43,4 +47,9 @@ interface PlayerData {
 
 interface GameData {
   players: string[];
+}
+
+interface SetPositionData {
+  room: string;
+  position: string;
 }
