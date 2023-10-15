@@ -14,10 +14,6 @@ interface GameField {
   [position: string]: string;
 }
 
-const sessionStoredSocketId = sessionStorage.getItem("socketId")
-  ? sessionStorage.getItem("socketId")
-  : "";
-
 const room = "room1";
 
 export const socket = io("http://localhost:8080", {
@@ -25,6 +21,8 @@ export const socket = io("http://localhost:8080", {
     "room": room,
   },
 });
+
+socket.emit("self-join");
 
 export default component$(() => {
   const gameField: GameField = useStore({
@@ -43,26 +41,40 @@ export default component$(() => {
   const player2 = useSignal("");
   const activePlayer = useSignal("");
 
-  socket.on("connection", (data: string) => {
-    console.log("socket.on ~ data:", data);
+  socket.on("self-join", (data: string) => {
     player.value = data;
-    sessionStorage.setItem("socketId", data);
     socket.emit("join", { player: data, room });
   });
 
+  const checkAndReplaceOldPlayerInField = $(async (newPlayer: string) => {
+    const fieldsOfOldPlayer = Object.keys(gameField).filter(
+      (position: string) => {
+        return gameField[position] !== "" &&
+          gameField[position] !== player.value;
+      },
+    );
+    fieldsOfOldPlayer.forEach((position: string) => {
+      gameField[position] = newPlayer;
+    });
+    if (fieldsOfOldPlayer.length > 0) {
+      socket.emit("set-game-field", { room, gameField });
+    }
+  });
+
   socket.on("join", (data: PlayerData) => {
-    console.log("socket.on ~ join:", data, player.value);
+    console.log("join");
+
     if (data.player !== player.value) {
       player2.value = data.player;
+      console.log("player2");
+      checkAndReplaceOldPlayerInField(data.player);
     }
-    if (data.players && data.players.length > 1) {
-      data.players.find((playerEntry: string) => {
-        if (playerEntry !== player.value) {
-          player2.value = playerEntry;
-          setActivePlayer(playerEntry);
-        }
-      });
-    }
+  });
+
+  socket.on("set-player2", (data: PlayerData) => {
+    console.log("set-player2");
+    player2.value = data.player;
+    setActivePlayer(data.player);
   });
 
   const setActivePlayer = $((player: string) => {
@@ -72,6 +84,12 @@ export default component$(() => {
 
   socket.on("set-active-player", (player: string) => {
     activePlayer.value = player;
+  });
+
+  socket.on("set-game-field", (tmpGameField: GameField) => {
+    Object.keys(tmpGameField).forEach((position: string) => {
+      gameField[position] = tmpGameField[position];
+    });
   });
 
   socket.on("player-left", (data: PlayerData) => {

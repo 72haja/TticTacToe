@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 const io = new Server(8080, {
   cors: {
     origin: 'http://localhost:8081',
-  }
+  },
 });
 
 const gamePlayers: string[] = [];
@@ -18,16 +18,28 @@ io.on('connection', (socket) => {
 
   // Send data to everyone who is connected
 
-  socket.emit('connection', socket.id);
+  socket.on("self-join", () => {
+    setTimeout(() => {
+      socket.emit("self-join", socket.id);
+    }, 100);
+  })
 
   socket.on('game', (data) => {
     socket.emit('game', data);
   })
 
   socket.on('join', (data: PlayerData) => {
-    gamePlayers.push(data.player);
+    if (!gamePlayers.includes(data.player)) {
+      gamePlayers.push(data.player);
+    }
+    console.log('🚀 ~ file: index.ts:33 ~ socket.on ~ gamePlayers:', gamePlayers);
     socket.to(connectionRoom).emit('join', { player: data.player });
-    socket.emit('join', { players: gamePlayers } as GameData);
+
+    const player2 = gamePlayers.find(player => player !== socket.id);
+    console.log('🚀 ~ file: index.ts:38 ~ socket.on ~ player2:', player2);
+    if (!player2) return;
+
+    socket.emit('set-player2', { player: player2 });
   })
 
   socket.on('disconnect', () => {
@@ -36,20 +48,20 @@ io.on('connection', (socket) => {
   });
 
   socket.on('set-position', (data: SetPositionData) => {
-    socket.to(connectionRoom).emit('set-position', data);
+    socket.to(data.room).emit('set-position', data);
   })
 
   socket.on("set-active-player", (data: SetActivePlayerData) => {
-    socket.to(connectionRoom).emit("set-active-player", data.player);
+    socket.to(data.room).emit("set-active-player", data.player);
+  })
+
+  socket.on("set-game-field", (data: SetGameFieldData) => {
+    socket.to(data.room).emit("set-game-field", data.gameField);
   })
 })
 
 interface PlayerData {
   player: string;
-}
-
-interface GameData {
-  players: string[];
 }
 
 interface SetPositionData {
@@ -60,4 +72,11 @@ interface SetPositionData {
 interface SetActivePlayerData {
   room: string;
   player: string;
+}
+
+interface SetGameFieldData {
+  room: string;
+  gameField: {
+    [key: string]: string;
+  }[];
 }
