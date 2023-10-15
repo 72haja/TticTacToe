@@ -1,4 +1,4 @@
-import { $, component$, useSignal } from "@builder.io/qwik";
+import { $, component$, useSignal, useStore } from "@builder.io/qwik";
 import { io } from "socket.io-client";
 
 interface SetPositionData {
@@ -27,7 +27,7 @@ export const socket = io("http://localhost:8080", {
 });
 
 export default component$(() => {
-  const gameField: GameField = {
+  const gameField: GameField = useStore({
     "0.0": "",
     "0.1": "",
     "0.2": "",
@@ -37,7 +37,7 @@ export default component$(() => {
     "2.0": "",
     "2.1": "",
     "2.2": "",
-  };
+  });
 
   const player = useSignal("");
   const player2 = useSignal("");
@@ -90,11 +90,12 @@ export default component$(() => {
           return (
             <button
               onClick$={() => (sendPosition(position))}
-              class="w-full h-full"
+              class="w-full h-full flex flex-col gap-2"
               disabled={gameField[position] !== ""}
               key={position}
             >
-              {gameField[position]} {position}
+              <span>{gameField[position]}</span>
+              <span>{position}</span>
             </button>
           );
         })}
