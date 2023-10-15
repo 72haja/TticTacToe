@@ -39,6 +39,9 @@ io.on('connection', (socket) => {
     socket.to(connectionRoom).emit('set-position', data);
   })
 
+  socket.on("set-active-player", (data: SetActivePlayerData) => {
+    socket.to(connectionRoom).emit("set-active-player", data.player);
+  })
 })
 
 interface PlayerData {
@@ -52,4 +55,9 @@ interface GameData {
 interface SetPositionData {
   room: string;
   position: string;
+}
+
+interface SetActivePlayerData {
+  room: string;
+  player: string;
 }
