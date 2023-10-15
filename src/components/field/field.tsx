@@ -1,43 +1,49 @@
 import { $, component$, useSignal } from "@builder.io/qwik";
 import { io } from "socket.io-client";
-import { v4 as uuid } from "uuid";
 
 export default component$(() => {
   const room = "room1";
 
   const socket = io("http://localhost:8080", {
     extraHeaders: {
-      "room": room
-    }
+      "room": room,
+    },
   });
 
-  const player = uuid();
+  const player = useSignal("");
   const player2 = useSignal("");
 
-  socket.emit("join", { player, room });
-
   socket.on("connection", (data) => {
-    console.log("connectionId:", data);
+    console.log("socket.on ~ data:", data);
+    player.value = data;
+    socket.emit("join", { player: data, room });
   });
 
   socket.on("join", (data) => {
-    console.log("socket.on ~ join:", data, player);
-    if (data.player !== player) {
+    console.log("socket.on ~ join:", data, player.value);
+    if (data.player !== player.value) {
       player2.value = data.player;
     }
-    if(data.players?.length > 1){
+    if (data.players?.length > 1) {
       data.players.find((playerEntry: string) => {
-        if(playerEntry !== player){
+        if (playerEntry !== player.value) {
           player2.value = playerEntry;
           console.log("start game");
         }
-      })
+      });
     }
   });
   // socket.on("game", (data) => {
   //   console.log("🚀 ~ file: field.tsx:8 ~ socket.on ~ data:", data);
   //   console.log(socket.id); // x8WIv7-mJelg7on_ALbx
   // });
+
+  socket.on("player-left", (data) => {
+    if (data.player === player2.value) {
+      player2.value = "";
+    }
+    alert(`${data.player} left the game`);
+  });
 
   const sendPosition = $((pos: Number) => {
     // socket.emit("game", { position: pos });

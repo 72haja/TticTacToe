@@ -1,13 +1,10 @@
 import { Server } from 'socket.io';
-import { v4 as uuid } from 'uuid';
 
 const io = new Server(8080, {
   cors: {
     origin: 'http://localhost:8081',
   }
 });
-
-const connectionId = uuid();
 
 const gamePlayers: string[] = [];
 
@@ -22,7 +19,7 @@ io.on('connection', (socket) => {
 
   // Send data to everyone who is connected
 
-  socket.emit('connection', connectionId);
+  socket.emit('connection', socket.id);
 
   socket.on('game', (data) => {
     socket.emit('game', data);
@@ -34,12 +31,10 @@ io.on('connection', (socket) => {
     socket.emit('join', { players: gamePlayers } as GameData);
   })
 
-  socket.on('leave', (data: PlayerData) => {
-    console.log('🚀 ~ file: index.ts:32 ~ socket.on ~ data:', data);
-    gamePlayers.splice(gamePlayers.indexOf(data.player), 1);
-    socket.emit('disconnect', gamePlayers);
-    console.log('🚀 ~ file: index.ts:27 ~ socket.on ~ gamePlayers:', gamePlayers);
-  })
+  socket.on('disconnect', () => {
+    gamePlayers.splice(gamePlayers.indexOf(socket.id), 1);
+    socket.to(connectionRoom).emit('player-left', { player: socket.id });
+  });
 })
 
 interface PlayerData {
