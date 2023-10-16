@@ -55,7 +55,6 @@ export default component$<ItemProps>((props) => {
 
   useTask$(({ track }) => {
     const newPlayer2 = track(() => props.player2);
-    console.log('🚀 ~ file: gameField.tsx:56 ~ newPlayer2:', newPlayer2);
     if (newPlayer2 === "") return;
     checkAndReplaceOldPlayerInField(newPlayer2)
     gameReady.value = true;
@@ -109,17 +108,21 @@ export default component$<ItemProps>((props) => {
     });
   });
 
-  const handleOnNewGame = $(() => {
+  const resetGameField = $(() => {
     Object.keys(gameField)
       .forEach((position: string) => {
         gameField[position] = "";
       });
-    gameFinished.value = false;
-    gameReady.value = false;
+      gameFinished.value = false;
+  })
+
+  const handleOnNewGame = $((data: string) => {
+    props.setActivePlayer(data);
+    resetGameField()
   });
 
   socket.on("new-game", () => {
-    handleOnNewGame();
+    resetGameField();
   });
 
 
@@ -129,6 +132,7 @@ export default component$<ItemProps>((props) => {
         ? <VictoryDialog
           player={props.player}
           playerIcon={props.playerIcon}
+          player2={props.player2}
           activePlayer={props.activePlayer}
           room={props.room}
           onNewGame={handleOnNewGame}
