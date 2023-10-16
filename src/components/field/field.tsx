@@ -1,6 +1,8 @@
 import { $, component$, useSignal } from "@builder.io/qwik";
 import { io } from "socket.io-client";
 import GameMetaInfo from "./gameMetaInfo";
+import ResponsiveFieldWrapper from "../responsiveFieldWrapper/responsiveFieldWrapper";
+import GameField from "./gameField";
 
 
 interface PlayerData {
@@ -82,7 +84,7 @@ export default component$(() => {
         player={player.value}
       />
       <span>{player2.value}</span>
-      {/* <ResponsiveFieldWrapper>
+      <ResponsiveFieldWrapper>
         <GameField
           player={player.value}
           player2={player2.value}
@@ -91,7 +93,7 @@ export default component$(() => {
           setActivePlayer={setActivePlayer}
           room={room}
         />
-      </ResponsiveFieldWrapper> */}
+      </ResponsiveFieldWrapper>
     </div>
   );
 });
