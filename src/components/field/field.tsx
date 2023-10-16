@@ -23,7 +23,6 @@ socket.onAny((event, ...args) => {
   console.log(event, args);
 });
 
-console.log("socket", socket);
 socket.connect();
 
 socket.emit("self-join");
@@ -40,15 +39,12 @@ export default component$(() => {
   });
 
   socket.on("join", (data: PlayerData) => {
-    console.log("join");
+    if (data.player === player.value) return;
 
-    if (data.player !== player.value) {
-      player2.value = data.player;
-    }
+    player2.value = data.player;
   });
 
   socket.on("set-player2", (data: PlayerData) => {
-    console.log("set-player2");
     player2.value = data.player;
     setActivePlayer(data.player);
   });
@@ -71,9 +67,9 @@ export default component$(() => {
   });
 
   socket.on("player-left", (data: PlayerData) => {
-    if (data.player === player2.value) {
-      player2.value = "";
-    }
+    if (data.player !== player2.value) return
+
+    player2.value = "";
   });
 
   return (
@@ -83,7 +79,6 @@ export default component$(() => {
         activePlayer={activePlayer.value}
         player={player.value}
       />
-      <span>{player2.value}</span>
       <ResponsiveFieldWrapper>
         <GameField
           player={player.value}
