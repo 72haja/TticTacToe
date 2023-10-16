@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --port 8081",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "ts-node --esm nodeServer/index.ts"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.5",
