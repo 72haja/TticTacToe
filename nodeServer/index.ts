@@ -32,11 +32,9 @@ io.on('connection', (socket) => {
     if (!gamePlayers.includes(data.player)) {
       gamePlayers.push(data.player);
     }
-    console.log('🚀 ~ file: index.ts:33 ~ socket.on ~ gamePlayers:', gamePlayers);
-    socket.to(connectionRoom).emit('join', { player: data.player });
+    socket.to(connectionRoom).emit('join', { player: data.player, id });
 
     const player2 = gamePlayers.find(player => player !== socket.id);
-    console.log('🚀 ~ file: index.ts:38 ~ socket.on ~ player2:', player2);
     if (!player2) return;
 
     socket.emit('set-player2', { player: player2 });
