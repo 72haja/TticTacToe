@@ -34,6 +34,12 @@ io.on('connection', (socket) => {
     }
     socket.to(connectionRoom).emit('join', { player: data.player });
 
+    if (gamePlayers.length === 1) {
+      socket.emit('your-are-player1');
+    } else {
+      socket.emit('your-are-player2');
+    }
+
     const player2 = gamePlayers.find(player => player !== socket.id);
     if (!player2) return;
 

@@ -1,5 +1,7 @@
 import { $, component$, useSignal, useStore } from "@builder.io/qwik";
 import { io } from "socket.io-client";
+import Player1Icon from "./Player1Icon";
+import Player2Icon from "./Player2Icon";
 
 interface SetPositionData {
   room: string;
@@ -43,6 +45,7 @@ export default component$(() => {
   });
 
   const player = useSignal("");
+  const playerIcon = useSignal("");
   const player2 = useSignal("");
   const activePlayer = useSignal("");
 
@@ -81,6 +84,14 @@ export default component$(() => {
     player2.value = data.player;
     setActivePlayer(data.player);
   });
+
+  socket.on("your-are-player1", () => {
+    playerIcon.value = "CilCircle";
+  })
+
+  socket.on("your-are-player2", () => {
+    playerIcon.value = "CilXCircle";
+  })
 
   const setActivePlayer = $((player: string) => {
     activePlayer.value = player;
@@ -146,31 +157,51 @@ export default component$(() => {
 
   return (
     <div class="w-full h-full flex flex-col gap-2">
-      <span>
-        activePlayer: {activePlayer.value}
-      </span>
-      <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] max-h-[100%] [&>button]:border [&>button]:border-gray-600 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button]:bg-gray-50/20 [&>button]:rounded-none [&>button]:outline-none">
+      <div class="grid grid-cols-2 w-full">
+        <div class="flex items-center gap-2 w-full h-[50px]">
+          <span>Your Icon: </span>
+          <Player1Icon
+            playerIcon={playerIcon.value}
+            size="h-full"
+          />
+        </div>
+        <div class="flex items-center gap-2 w-full h-[50px]">
+          <span>activePlayer: </span>
+          {activePlayer.value === player.value
+            ? <Player1Icon
+              playerIcon={playerIcon.value}
+              size="h-full"
+            />
+            : <Player2Icon
+              playerIcon={playerIcon.value}
+              size="h-full"
+            />
+          }
+        </div>
+      </div>
+      <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%]">
         {Object.keys(gameField).map((position: string) => {
           return (
             <button
               onClick$={() => (sendPosition(position))}
-              class="w-full h-full flex flex-col gap-2"
+              class="w-full h-full border border-gray-600 grid grid-cols-1 items-center 
+                justify-center gap-2 bg-gray-50/20 rounded-none outline-none"
               disabled={gameField[position] !== "" ||
                 activePlayer.value !== player.value}
               key={position}
             >
-              <span>{gameField[position]}</span>
-              <span>{position}</span>
+              {gameField[position] === player.value
+                ? <Player1Icon playerIcon={playerIcon.value} />
+                : ""
+              }
+              {gameField[position] === player2.value
+                ? <Player2Icon playerIcon={playerIcon.value} />
+                : ""
+              }
             </button>
           );
         })}
       </div>
-      <span>
-        player1.value: {player.value}
-      </span>
-      <span>
-        player2.value: {player2.value}
-      </span>
     </div>
   );
 });
