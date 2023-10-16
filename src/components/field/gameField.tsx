@@ -1,7 +1,8 @@
 import { $, component$, useSignal, useStore, useTask$ } from "@builder.io/qwik";
-import Player1Icon from "./Player1Icon";
-import Player2Icon from "./Player2Icon";
-import { socket } from "./field.tsx"
+import { socket } from "./Field.tsx";
+import Player1Icon from "./Player1Icon.tsx";
+import Player2Icon from "./Player2Icon.tsx";
+import VictoryDialog from "./VictoryDialog.tsx";
 
 interface ItemProps {
   player: any;
@@ -23,6 +24,7 @@ interface GameField {
 
 export default component$<ItemProps>((props) => {
   const gameReady = useSignal(false);
+  const gameFinished = useSignal(false);
 
   const gameField: GameField = useStore({
     "0.0": "",
@@ -78,6 +80,7 @@ export default component$<ItemProps>((props) => {
 
     if (won) {
       console.log(`${props.activePlayer} wins!`);
+      gameFinished.value = true;
     }
     return won;
   });
@@ -106,8 +109,32 @@ export default component$<ItemProps>((props) => {
     });
   });
 
+  const handleOnNewGame = $(() => {
+    Object.keys(gameField)
+      .forEach((position: string) => {
+        gameField[position] = "";
+      });
+    gameFinished.value = false;
+    gameReady.value = false;
+  });
+
+  socket.on("new-game", () => {
+    handleOnNewGame();
+  });
+
+
   return (
     <div class="w-full h-full">
+      {gameFinished.value
+        ? <VictoryDialog
+          player={props.player}
+          playerIcon={props.playerIcon}
+          activePlayer={props.activePlayer}
+          room={props.room}
+          onNewGame={handleOnNewGame}
+        />
+        : ""
+      }
       {gameReady.value
         ? <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%]">
           {Object.keys(gameField).map((position: string) => {
@@ -116,8 +143,9 @@ export default component$<ItemProps>((props) => {
                 onClick$={() => (sendPosition(position))}
                 class="w-full h-full border border-gray-600 grid grid-cols-1 items-center 
           justify-center gap-2 bg-gray-50/20 rounded-none outline-none"
-                disabled={gameField[position] !== "" ||
-                  props.activePlayer !== props.player}
+                disabled={gameField[position] !== ""
+                  || props.activePlayer !== props.player
+                  || gameFinished.value}
                 key={position}
               >
                 {gameField[position] === props.player

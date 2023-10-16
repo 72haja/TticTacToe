@@ -62,6 +62,10 @@ io.on('connection', (socket) => {
   socket.on("set-game-field", (data: SetGameFieldData) => {
     socket.to(data.room).emit("set-game-field", data.gameField);
   })
+
+  socket.on("new-game", (room: string) => {
+    socket.to(room).emit("new-game");
+  })
 })
 
 interface PlayerData {

@@ -1,8 +1,8 @@
 import { $, component$, useSignal } from "@builder.io/qwik";
 import { io } from "socket.io-client";
-import GameMetaInfo from "./gameMetaInfo";
+import GameMetaInfo from "./GameMetaInfo";
 import ResponsiveFieldWrapper from "../responsiveFieldWrapper/responsiveFieldWrapper";
-import GameField from "./gameField";
+import GameField from "./GameField";
 
 
 interface PlayerData {
