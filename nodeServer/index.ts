@@ -19,6 +19,8 @@ io.on('connection', (socket) => {
   // Send data to everyone who is connected
 
   socket.on("self-join", () => {
+    console.log("self-join");
+    
     setTimeout(() => {
       socket.emit("self-join", socket.id);
     }, 100);
@@ -29,6 +31,8 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', (data: PlayerData) => {
+    console.log("join", data.player);
+    
     if (!gamePlayers.includes(data.player)) {
       gamePlayers.push(data.player);
     }
