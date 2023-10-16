@@ -7,11 +7,19 @@
     height: unset;
     width: 100%;
   }
+
+  #square-wrapper {
+    height: max-content;
+  }
 }
 
 @media screen and (orientation:landscape) {
   #square {
     height: 100%;
     width: unset;
+  }
+  
+  #square-wrapper {
+    height: 100%;
   }
 }

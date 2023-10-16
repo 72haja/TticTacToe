@@ -1,0 +1,11 @@
+@media screen and (orientation:portrait) {
+  #meta-game-info-wrapper {
+    width: 100%;
+  }
+}
+
+@media screen and (orientation:landscape) {
+  #meta-game-info-wrapper {
+    width: calc(100vh - (48 * 2 + 50 + 8) * 1px);
+  }
+}
