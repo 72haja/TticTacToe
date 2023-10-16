@@ -87,7 +87,7 @@ export default component$<ItemProps>((props) => {
       room: props.room,
       position: pos,
     };
-    gameField[pos] = props.player.value;
+    gameField[pos] = props.player;
     socket.emit("set-position", setPositionData);
     if (await checkWinner()) {
       return;
@@ -134,11 +134,6 @@ export default component$<ItemProps>((props) => {
         </div>
         : <span> Waiting for player 2 {props.player2}</span>
       }
-      <div class="flex flex-col gap-2">
-        <span>player: {props.player}</span>
-        <span>player2: {props.player2}</span>
-        <span>activePlayer: {props.activePlayer}</span>
-      </div>
     </div>
   );
 });
