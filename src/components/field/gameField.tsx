@@ -1,8 +1,10 @@
-import { $, component$, useSignal, useStore, useTask$ } from "@builder.io/qwik";
+import { $, component$, useContext, useSignal, useStore, useTask$ } from "@builder.io/qwik";
+import { SnackbarCTX, SnackbarState } from "../../store/SnackbarStore.ts";
 import { socket } from "./Field.tsx";
 import Player1Icon from "./Player1Icon.tsx";
 import Player2Icon from "./Player2Icon.tsx";
 import VictoryDialog from "./VictoryDialog.tsx";
+import { v4 as uuid } from "uuid";
 
 interface ItemProps {
   player: any;
@@ -113,7 +115,7 @@ export default component$<ItemProps>((props) => {
       .forEach((position: string) => {
         gameField[position] = "";
       });
-      gameFinished.value = false;
+    gameFinished.value = false;
   })
 
   const handleOnNewGame = $((data: string) => {
@@ -125,6 +127,15 @@ export default component$<ItemProps>((props) => {
     resetGameField();
   });
 
+  // function to set snackbarCTX.show = true
+  const snackbarCTX = useContext(SnackbarCTX) as SnackbarState;
+
+  const showSnackbar = $(() => {
+    snackbarCTX.show = true;
+    snackbarCTX.text = "in gameField.tsx";
+    snackbarCTX.type = "error";
+    snackbarCTX.id = uuid();
+  });
 
   return (
     <div class="w-full h-full">
@@ -146,7 +157,7 @@ export default component$<ItemProps>((props) => {
               <button
                 onClick$={() => (sendPosition(position))}
                 class="w-full h-full border border-gray-600 grid grid-cols-1 items-center 
-          justify-center gap-2 bg-gray-50/20 rounded-none outline-none"
+                    justify-center gap-2 bg-gray-50/20 rounded-none outline-none"
                 disabled={gameField[position] !== ""
                   || props.activePlayer !== props.player
                   || gameFinished.value}
@@ -166,6 +177,9 @@ export default component$<ItemProps>((props) => {
         </div>
         : <span> Waiting for player 2 {props.player2}</span>
       }
+      <button onClick$={() => showSnackbar()}>
+        showSnackbar
+      </button>
     </div>
   );
 });
