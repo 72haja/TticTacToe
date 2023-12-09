@@ -1,5 +1,5 @@
 import { $, component$, useContext, useSignal, useStore, useTask$ } from "@builder.io/qwik";
-import { SnackbarCTX, SnackbarState } from "../../store/SnackbarStore.ts";
+import { SnackbarCTX, SnackbarState, SnackbarType } from "../../store/SnackbarStore.ts";
 import { socket } from "./Field.tsx";
 import Player1Icon from "./Player1Icon.tsx";
 import Player2Icon from "./Player2Icon.tsx";
@@ -40,7 +40,18 @@ export default component$<ItemProps>((props) => {
     "2.2": "",
   });
 
+  const snackbarCTX = useContext(SnackbarCTX) as SnackbarState;
+
+  const showSnackbar = $((text: string, type: SnackbarType) => {
+    snackbarCTX.show = true;
+    snackbarCTX.text = text;
+    snackbarCTX.type = type;
+    snackbarCTX.id = uuid();
+  });
+
   const checkAndReplaceOldPlayerInField = $(async (newPlayer: string) => {
+    // function to set snackbarCTX.show = true
+
     const fieldsOfOldPlayer = Object.keys(gameField).filter(
       (position: string) => {
         return gameField[position] !== "" &&
@@ -57,9 +68,16 @@ export default component$<ItemProps>((props) => {
 
   useTask$(({ track }) => {
     const newPlayer2 = track(() => props.player2);
-    if (newPlayer2 === "") return;
+    console.log('🚀 ~ file: gameField.tsx:71 ~ newPlayer2:', newPlayer2);
+    if (newPlayer2 === "") {
+      if (gameReady.value) {
+        showSnackbar("Spieler 2 hat das Spiel verlassen", "error");
+      }
+      return
+    };
     checkAndReplaceOldPlayerInField(newPlayer2)
     gameReady.value = true;
+    showSnackbar("Spieler 2 ist beigetreten", "success");
   });
 
   const checkWinner = $(() => {
@@ -80,7 +98,6 @@ export default component$<ItemProps>((props) => {
     );
 
     if (won) {
-      console.log(`${props.activePlayer} wins!`);
       gameFinished.value = true;
     }
     return won;
@@ -127,16 +144,6 @@ export default component$<ItemProps>((props) => {
     resetGameField();
   });
 
-  // function to set snackbarCTX.show = true
-  const snackbarCTX = useContext(SnackbarCTX) as SnackbarState;
-
-  const showSnackbar = $(() => {
-    snackbarCTX.show = true;
-    snackbarCTX.text = "in gameField.tsx";
-    snackbarCTX.type = "error";
-    snackbarCTX.id = uuid();
-  });
-
   return (
     <div class="w-full h-full">
       {gameFinished.value
@@ -177,9 +184,6 @@ export default component$<ItemProps>((props) => {
         </div>
         : <span> Waiting for player 2 {props.player2}</span>
       }
-      <button onClick$={() => showSnackbar()}>
-        showSnackbar
-      </button>
     </div>
   );
 });

@@ -20,7 +20,7 @@ export const socket = io(URL, {
 });
 
 socket.onAny((event, ...args) => {
-  console.log(event, args);
+  console.log("onAny", event, args);
 });
 
 socket.connect();

@@ -1,6 +1,6 @@
 import { createContextId } from '@builder.io/qwik';
 
-type SnackbarType = 'success' | 'error';
+export type SnackbarType = 'success' | 'error';
 
 export interface SnackbarState {
   show: boolean;

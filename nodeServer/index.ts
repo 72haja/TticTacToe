@@ -21,7 +21,7 @@ io.on('connection', (socket) => {
   socket.on("self-join", () => {
     setTimeout(() => {
       socket.emit("self-join", socket.id);
-    }, 100);
+    }, 200);
   })
 
   socket.on('game', (data) => {
