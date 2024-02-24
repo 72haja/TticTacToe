@@ -2,10 +2,13 @@ import { Server } from 'socket.io';
 
 import { SetPositionData } from '../src/models/SetPositionData';
 import { SetGameFieldData } from '../src/models/SetGameFieldData';
+import { ResetPlayerState } from '../src/models/ResetPlayerState';
 
 const io = new Server(8080, {
   cors: {
-    origin: 'http://localhost:8081',
+    // origin: 'http://localhost:8081',
+    // origin: 'http://192.168.10.236:8081',
+    origin: 'http://192.168.10.210:8081',
   },
 });
 
@@ -52,6 +55,10 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     gamePlayers.splice(gamePlayers.indexOf(socket.id), 1);
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
+  });
+
+  socket.on('reset-player-state', (data: ResetPlayerState) => {
+    socket.to(data.room).emit('reset-player-state', data);
   });
 
   socket.on('set-position', (data: SetPositionData) => {

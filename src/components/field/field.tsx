@@ -1,8 +1,10 @@
-import { $, component$, useSignal } from "@builder.io/qwik";
+import { $, Signal, component$, useSignal } from "@builder.io/qwik";
 import { io } from "socket.io-client";
 import GameMetaInfo from "./GameMetaInfo";
 import ResponsiveFieldWrapper from "../responsiveFieldWrapper/ResponsiveFieldWrapper";
 import OuterGameField from "./OuterGameField";
+import { ResetPlayerState } from "../../models/ResetPlayerState";
+import { IconName } from "../../models/IconName";
 
 
 interface PlayerData {
@@ -12,7 +14,7 @@ interface PlayerData {
 
 const room = "room1";
 
-const URL = "http://localhost:8080";
+const URL = "http://192.168.10.210:8080";
 export const socket = io(URL, {
   extraHeaders: {
     "room": room,
@@ -29,9 +31,11 @@ socket.emit("self-join");
 
 export default component$(() => {
   const player = useSignal("");
-  const playerIcon = useSignal("");
+  const playerIcon: Signal<IconName> = useSignal("CilCircle");
   const player2 = useSignal("");
   const activePlayer = useSignal("");
+
+  const activePlayerAfterPlayerLeft: Signal<IconName | ""> = useSignal("");
 
   socket.on("self-join", (data: string) => {
     player.value = data;
@@ -57,19 +61,41 @@ export default component$(() => {
     playerIcon.value = "CilXCircle";
   })
 
+  socket.on("reset-player-state", (data: ResetPlayerState) => {
+    playerIcon.value = data.iconFromOtherPlayer === "CilXCircle"
+      ? "CilCircle"
+      : "CilXCircle";
+
+    activePlayer.value = data.activePlayer
+  })
+
   const setActivePlayer = $((player: string) => {
     activePlayer.value = player;
     socket.emit("set-active-player", { player, room });
   });
 
-  socket.on("set-active-player", (player: string) => {
-    activePlayer.value = player;
+  socket.on("set-active-player", (playerProp: string) => {
+    if (activePlayerAfterPlayerLeft.value !== "") {
+      const oldActivePlayer = playerIcon.value === activePlayerAfterPlayerLeft.value
+        ? player.value
+        : player2.value;
+      setActivePlayer(oldActivePlayer);
+      activePlayerAfterPlayerLeft.value = "";
+      return;
+    } else {
+      activePlayer.value = playerProp;
+    }
   });
 
   socket.on("player-left", (data: PlayerData) => {
     if (data.player !== player2.value) return
 
     player2.value = "";
+    const activePlayerIcon: IconName = activePlayer.value === player.value
+      ? playerIcon.value === "CilXCircle" ? "CilXCircle" : "CilCircle"
+      : playerIcon.value === "CilXCircle" ? "CilCircle" : "CilXCircle"
+
+    activePlayerAfterPlayerLeft.value = activePlayerIcon
   });
 
   return (

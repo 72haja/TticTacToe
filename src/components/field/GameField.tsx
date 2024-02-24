@@ -1,10 +1,11 @@
-import { $, component$, useSignal } from "@builder.io/qwik";
+import { $, component$, useComputed$, useSignal } from "@builder.io/qwik";
 import { GameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
 import { socket } from "./Field.tsx";
 import TicTacToeCell from "./TicTacToeCell.tsx";
 import { SetPositionData } from "../../models/SetPositionData.ts";
 import Player1Icon from "./Player1Icon.tsx";
 import Player2Icon from "./Player2Icon.tsx";
+import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
 
 interface ItemProps {
   player: any;
@@ -19,6 +20,7 @@ interface ItemProps {
   gameReady: boolean;
   checkWinner: Function;
   fieldWinner: string | null;
+  disabled: boolean;
 }
 
 export default component$<ItemProps>((props) => {
@@ -29,6 +31,7 @@ export default component$<ItemProps>((props) => {
       outerGameFieldPosition: props.outerGameFieldPosition,
       room: props.room,
       position: pos,
+      allowedOuterGameField: getAllowedOuterGameField(pos),
     };
     props.setPosition(props.outerGameFieldPosition, pos, props.player);
     socket.emit("set-position", setPositionData);
@@ -38,16 +41,24 @@ export default component$<ItemProps>((props) => {
     props.setActivePlayer(props.player2);
   });
 
+  const computedClass = useComputed$(() => {
+    const defaultClass = "grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] border-2 border-gray-300";
+
+    return props.disabled ?
+      `${defaultClass} cursor-not-allowed opacity-50 pointer-events-none`  
+      : defaultClass;
+  });
+
   return (
     <div class="w-full h-full">
       {props.gameReady
-        ? <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] border-2
-            border-gray-300">
+        ? <div class={computedClass}>
           {
             props.fieldWinner === null 
               && (Object.keys(props.gameField) as Position[]).map((position: Position) => {
                 return (
                   <TicTacToeCell
+                    key={position}
                     player={props.player}
                     player2={props.player2}
                     playerIcon={props.playerIcon}

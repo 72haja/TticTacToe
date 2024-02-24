@@ -1,13 +1,15 @@
 import { $, component$, useContext, useSignal, useStore, useTask$ } from "@builder.io/qwik";
 import { v4 as uuid } from "uuid";
 import { GameField as GameFieldModel, OuterGameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
+import { SetGameFieldData } from "../../models/SetGameFieldData.ts";
+import { SetPositionData } from "../../models/SetPositionData.ts";
 import { SnackbarCTX, SnackbarState, SnackbarType } from "../../store/SnackbarStore.ts";
+import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
+import { initOuterGameField } from "../../utils/initGameField.ts";
 import { socket } from "./Field.tsx";
 import GameField from "./GameField.tsx";
 import VictoryDialog from "./VictoryDialog.tsx";
-import { SetPositionData } from "../../models/SetPositionData.ts";
-import { SetGameFieldData } from "../../models/SetGameFieldData.ts";
-import { initOuterGameField } from "../../utils/initGameField.ts";
+import { ResetPlayerState } from "../../models/ResetPlayerState.ts";
 
 interface ItemProps {
   player: any;
@@ -23,6 +25,7 @@ export default component$<ItemProps>((props) => {
   const gameFinished = useSignal(false);
 
   const outerGameField: OuterGameField = useStore(initOuterGameField());
+  const allowedOuterGameField = useSignal<OuterGameFieldPosition | null>(null);
 
   const snackbarCTX = useContext(SnackbarCTX) as SnackbarState;
 
@@ -31,46 +34,6 @@ export default component$<ItemProps>((props) => {
     snackbarCTX.text = text;
     snackbarCTX.type = type;
     snackbarCTX.id = uuid();
-  });
-
-  const checkAndReplaceOldPlayerInField = $(async (newPlayer: string) => {
-    const outerGameFields = Object.entries(outerGameField) as [
-      OuterGameFieldPosition, { gameField: GameFieldModel }
-    ][];
-    outerGameFields.forEach(([outerGameFieldPosition, gameFieldObj]) => {
-      const positions = Object.keys(gameFieldObj.gameField) as Position[];
-
-      const fieldsOfOldPlayer = positions.filter(
-        (position: Position) => {
-          return gameFieldObj.gameField[position] !== "" &&
-            gameFieldObj.gameField[position] !== props.player;
-        },
-      );
-      fieldsOfOldPlayer.forEach((position: Position) => {
-        gameFieldObj.gameField[position] = newPlayer;
-      });
-      if (fieldsOfOldPlayer.length > 0) {
-        const setGameFieldData: SetGameFieldData = {
-          room: props.room,
-          gameField: gameFieldObj.gameField,
-          outerGameFieldPosition,
-        };
-        socket.emit("set-game-field", setGameFieldData);
-      }
-    });
-  });
-
-  useTask$(({ track }) => {
-    const newPlayer2 = track(() => props.player2);
-    if (newPlayer2 === "") {
-      if (gameReady.value) {
-        showSnackbar("Spieler 2 hat das Spiel verlassen", "error");
-      }
-      return
-    };
-    checkAndReplaceOldPlayerInField(newPlayer2)
-    gameReady.value = true;
-    showSnackbar("Spieler 2 ist beigetreten", "success");
   });
 
   const checkWinner = $((outerGameFieldPosition: OuterGameFieldPosition) => {
@@ -87,7 +50,7 @@ export default component$<ItemProps>((props) => {
 
     const relevantField = outerGameField[outerGameFieldPosition].gameField
 
-    const fieldWon = winningPositions.some((winningPosition) =>
+    const fieldWon = winningPositions.find((winningPosition) =>
       relevantField[winningPosition[0]] === relevantField[winningPosition[1]] &&
       relevantField[winningPosition[1]] === relevantField[winningPosition[2]] &&
       relevantField[winningPosition[0]] !== ""
@@ -121,12 +84,68 @@ export default component$<ItemProps>((props) => {
     return gameWon;
   });
 
+  const checkAndReplaceOldPlayerInField = $(async (newPlayer: string) => {
+    const outerGameFields = Object.entries(outerGameField) as [
+      OuterGameFieldPosition, { gameField: GameFieldModel }
+    ][];
+
+    const resetPlayerState: ResetPlayerState = {
+      room: props.room,
+      iconFromOtherPlayer: props.playerIcon,
+      activePlayer: props.activePlayer,
+      allowedOuterGameField: allowedOuterGameField.value,
+    };
+    socket.emit("reset-player-state", resetPlayerState);
+
+    outerGameFields.forEach(([outerGameFieldPosition, gameFieldObj]) => {
+      const positions = Object.keys(gameFieldObj.gameField) as Position[];
+
+      const fieldsOfOldPlayer = positions.filter(
+        (position: Position) => {
+          return gameFieldObj.gameField[position] !== "" &&
+            gameFieldObj.gameField[position] !== props.player;
+        },
+      );
+      fieldsOfOldPlayer.forEach((position: Position) => {
+        gameFieldObj.gameField[position] = newPlayer;
+      });
+      const anyFieldIsSet = Object.values(gameFieldObj.gameField).some((value: string) => value !== "");
+      if (anyFieldIsSet) {
+        const setGameFieldData: SetGameFieldData = {
+          room: props.room,
+          gameField: gameFieldObj.gameField,
+          outerGameFieldPosition,
+        };
+        socket.emit("set-game-field", setGameFieldData);
+      }
+    });
+  });
+
+  useTask$(({ track }) => {
+    const newPlayer2 = track(() => props.player2);
+    if (newPlayer2 === "") {
+      if (gameReady.value) {
+        showSnackbar("Spieler 2 hat das Spiel verlassen", "error");
+      }
+      return
+    };
+    checkAndReplaceOldPlayerInField(newPlayer2)
+    gameReady.value = true;
+    showSnackbar("Spieler 2 ist beigetreten", "success");
+  });
+
   const setPosition = $((outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) => {
     outerGameField[outerGameFieldPos].gameField[pos] = player;
+    allowedOuterGameField.value = getAllowedOuterGameField(pos);
   });
 
   socket.on("set-position", (data: SetPositionData) => {
     outerGameField[data.outerGameFieldPosition].gameField[data.position] = props.player2;
+    allowedOuterGameField.value = !!data.allowedOuterGameField
+      && outerGameField[data.allowedOuterGameField].fieldWinner === null
+      ? data.allowedOuterGameField
+      : null;
+
     checkWinner(data.outerGameFieldPosition);
   });
 
@@ -136,7 +155,12 @@ export default component$<ItemProps>((props) => {
     positions.forEach((position: Position) => {
       gameFieldObj.gameField[position] = setGameFieldData.gameField[position];
     });
+    checkWinner(setGameFieldData.outerGameFieldPosition);
   });
+
+  socket.on("reset-player-state", (data: ResetPlayerState) => {
+    allowedOuterGameField.value = data.allowedOuterGameField;
+  })
 
   const resetGameField = $(() => {
     const outerGameFields = Object.entries(outerGameField) as [OuterGameFieldPosition, { gameField: GameFieldModel }][];
@@ -180,6 +204,7 @@ export default component$<ItemProps>((props) => {
             .map(([outerGameFieldPosition, gameFieldObj]) => {
               return (
                 <GameField
+                  key={outerGameFieldPosition}
                   player={props.player}
                   player2={props.player2}
                   playerIcon={props.playerIcon}
@@ -192,6 +217,7 @@ export default component$<ItemProps>((props) => {
                   checkWinner={checkWinner}
                   setActivePlayer={props.setActivePlayer}
                   fieldWinner={outerGameField[outerGameFieldPosition].fieldWinner}
+                  disabled={!!allowedOuterGameField.value && allowedOuterGameField.value !== outerGameFieldPosition}
                 />
               );
             })
