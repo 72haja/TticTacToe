@@ -50,8 +50,6 @@ export default component$<ItemProps>((props) => {
   });
 
   const checkAndReplaceOldPlayerInField = $(async (newPlayer: string) => {
-    // function to set snackbarCTX.show = true
-
     const fieldsOfOldPlayer = Object.keys(gameField).filter(
       (position: string) => {
         return gameField[position] !== "" &&
@@ -68,7 +66,6 @@ export default component$<ItemProps>((props) => {
 
   useTask$(({ track }) => {
     const newPlayer2 = track(() => props.player2);
-    console.log('🚀 ~ file: gameField.tsx:71 ~ newPlayer2:', newPlayer2);
     if (newPlayer2 === "") {
       if (gameReady.value) {
         showSnackbar("Spieler 2 hat das Spiel verlassen", "error");
@@ -170,11 +167,11 @@ export default component$<ItemProps>((props) => {
                   || gameFinished.value}
                 key={position}
               >
-                {gameField[position] === props.player
+                {props.player && gameField[position] === props.player
                   ? <Player1Icon playerIcon={props.playerIcon} />
                   : ""
                 }
-                {gameField[position] === props.player2
+                {props.player2 && gameField[position] === props.player2
                   ? <Player2Icon playerIcon={props.playerIcon} />
                   : ""
                 }
