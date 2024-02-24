@@ -118,7 +118,7 @@ export default component$<ItemProps>((props) => {
       gameFinished.value = true;
     }
 
-    return fieldWon;
+    return gameWon;
   });
 
   const setPosition = $((outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) => {
