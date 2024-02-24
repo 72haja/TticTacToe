@@ -5,7 +5,11 @@ export type GameField = {
 }
 
 export type OuterGameFieldPosition = "top-left" | "top-center" | "top-right" | "center-left" | "center-center" | "center-right" | "bottom-left" | "bottom-center" | "bottom-right"
+// export type OuterGameFieldPosition = "center-center";
 
 export type OuterGameField = {
-  [position in OuterGameFieldPosition]: GameField;
+  [position in OuterGameFieldPosition]: {
+    gameField: GameField
+    fieldWinner: string | null
+  };
 }

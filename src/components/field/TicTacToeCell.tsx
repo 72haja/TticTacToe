@@ -26,13 +26,15 @@ export default component$<ItemProps>((props) => {
         || props.gameFinished}
       key={props.position}
     >
-      {props.player && props.gameField[props.position] === props.player
-        ? <Player1Icon playerIcon={props.playerIcon} />
-        : ""
+      {
+        props.player 
+        && props.gameField[props.position] === props.player
+        && <Player1Icon playerIcon={props.playerIcon} />
       }
-      {props.player2 && props.gameField[props.position] === props.player2
-        ? <Player2Icon playerIcon={props.playerIcon} />
-        : ""
+      {
+        props.player2
+        && props.gameField[props.position] === props.player2
+        && <Player2Icon playerIcon={props.playerIcon} />
       }
     </button>
   );

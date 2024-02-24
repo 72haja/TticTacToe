@@ -1,5 +1,8 @@
 import { Server } from 'socket.io';
 
+import { SetPositionData } from '../src/models/SetPositionData';
+import { SetGameFieldData } from '../src/models/SetGameFieldData';
+
 const io = new Server(8080, {
   cors: {
     origin: 'http://localhost:8081',
@@ -60,7 +63,7 @@ io.on('connection', (socket) => {
   })
 
   socket.on("set-game-field", (data: SetGameFieldData) => {
-    socket.to(data.room).emit("set-game-field", data.gameField);
+    socket.to(data.room).emit("set-game-field", data);
   })
 
   socket.on("new-game", (room: string) => {
@@ -72,19 +75,7 @@ interface PlayerData {
   player: string;
 }
 
-interface SetPositionData {
-  room: string;
-  position: string;
-}
-
 interface SetActivePlayerData {
   room: string;
   player: string;
-}
-
-interface SetGameFieldData {
-  room: string;
-  gameField: {
-    [key: string]: string;
-  }[];
 }

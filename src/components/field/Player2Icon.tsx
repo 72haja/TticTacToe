@@ -4,6 +4,7 @@ import { CilCircle, CilXCircle } from "../icons/icons";
 interface ItemProps {
   playerIcon: string;
   size?: string;
+  wrapperClass?: string;
 }
 
 export default component$<ItemProps>(({
@@ -14,9 +15,13 @@ export default component$<ItemProps>(({
   const computedClass = useComputed$(() => {
     return `${size} aspect-square`;
   });
+  
+  const computedWrapperClass = useComputed$(() => {
+    return `w-full h-full flex items-center justify-center ${props.wrapperClass}`;
+  })
 
   return (
-    <div class="flex items-center justify-center h-full w-full">
+    <div class={computedWrapperClass}>
       {props.playerIcon === "CilCircle"
         ? <CilXCircle class={computedClass} />
         : <CilCircle class={computedClass} />
