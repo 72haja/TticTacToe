@@ -1,6 +1,6 @@
 
 import { component$ } from "@builder.io/qwik";
-import { GameField } from "../../models/GameField";
+import { GameField, Position } from "../../models/GameField";
 import Player1Icon from "./Player1Icon";
 import Player2Icon from "./Player2Icon";
 
@@ -9,7 +9,7 @@ interface ItemProps {
   player2: string;
   playerIcon: string;
   activePlayer: string;
-  position: string;
+  position: Position;
   gameField: GameField;
   buttonClicked: Function;
   gameFinished: boolean;
