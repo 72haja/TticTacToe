@@ -1,7 +1,7 @@
 import { $, component$, useSignal } from "@builder.io/qwik";
 import { io } from "socket.io-client";
 import GameMetaInfo from "./GameMetaInfo";
-import ResponsiveFieldWrapper from "../responsiveFieldWrapper/responsiveFieldWrapper";
+import ResponsiveFieldWrapper from "../responsiveFieldWrapper/ResponsiveFieldWrapper";
 import GameField from "./GameField";
 
 
