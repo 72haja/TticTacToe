@@ -93,7 +93,7 @@ export default component$<ItemProps>((props) => {
       relevantField[winningPosition[0]] !== ""
     );
     if (fieldWon) {
-      outerGameField[outerGameFieldPosition].fieldWinner = props.activePlayer;
+      outerGameField[outerGameFieldPosition].fieldWinner = relevantField[fieldWon[0]];
     }
 
     const winningPositionsOuterGameField: OuterGameFieldPosition[][] = [
