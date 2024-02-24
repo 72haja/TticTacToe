@@ -1,10 +1,10 @@
 import { $, component$, useContext, useSignal, useStore, useTask$ } from "@builder.io/qwik";
 import { SnackbarCTX, SnackbarState, SnackbarType } from "../../store/SnackbarStore.ts";
 import { socket } from "./Field.tsx";
-import Player1Icon from "./Player1Icon.tsx";
-import Player2Icon from "./Player2Icon.tsx";
 import VictoryDialog from "./VictoryDialog.tsx";
 import { v4 as uuid } from "uuid";
+import { GameField } from "../../models/GameField.ts";
+import TicTacToeCell from "./TicTacToeCell.tsx";
 
 interface ItemProps {
   player: any;
@@ -18,10 +18,6 @@ interface ItemProps {
 interface SetPositionData {
   room: string;
   position: string;
-}
-
-interface GameField {
-  [position: string]: string;
 }
 
 export default component$<ItemProps>((props) => {
@@ -158,24 +154,16 @@ export default component$<ItemProps>((props) => {
         ? <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%]">
           {Object.keys(gameField).map((position: string) => {
             return (
-              <button
-                onClick$={() => (sendPosition(position))}
-                class="w-full h-full border border-gray-600 grid grid-cols-1 items-center 
-                    justify-center gap-2 bg-gray-50/20 rounded-none outline-none"
-                disabled={gameField[position] !== ""
-                  || props.activePlayer !== props.player
-                  || gameFinished.value}
-                key={position}
-              >
-                {props.player && gameField[position] === props.player
-                  ? <Player1Icon playerIcon={props.playerIcon} />
-                  : ""
-                }
-                {props.player2 && gameField[position] === props.player2
-                  ? <Player2Icon playerIcon={props.playerIcon} />
-                  : ""
-                }
-              </button>
+              <TicTacToeCell
+                player={props.player}
+                player2={props.player2}
+                playerIcon={props.playerIcon}
+                activePlayer={props.activePlayer}
+                position={position}
+                gameField={gameField}
+                buttonClicked={sendPosition}
+                gameFinished={gameFinished.value}
+              />
             );
           })}
         </div>
