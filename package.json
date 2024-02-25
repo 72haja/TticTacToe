@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "all": "node nodeServer/index.js & vite --port 8081",
     "dev": "vite --port 8081",
     "dev-host": "vite --port 8081 --host",
     "build": "tsc && vite build",
