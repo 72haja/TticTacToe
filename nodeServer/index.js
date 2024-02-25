@@ -4,7 +4,7 @@ const io = new Server(8080, {
   cors: {
     // origin: 'http://localhost:8081',
     // origin: 'http://192.168.10.236:8081',
-    origin: 'https://3.75.158.163:8081',
+    origin: 'https://35.160.120.126:8081',
   },
 });
 
