@@ -14,7 +14,7 @@ interface PlayerData {
 
 const room = "room1";
 
-const URL = "http://3.75.158.163:8080";
+const URL = "https://3.75.158.163:8080";
 export const socket = io(URL, {
   extraHeaders: {
     "room": room,
