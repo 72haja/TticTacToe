@@ -4,9 +4,11 @@ const io = new Server(8080, {
   cors: {
     // origin: 'http://localhost:8081',
     // origin: 'http://192.168.10.236:8081',
-    origin: 'https://n8rcx5-8081.csb.app',
+    origin: 'https://3.75.158.163:8081',
   },
 });
+
+console.log("Server started");
 
 const gamePlayers = [];
 

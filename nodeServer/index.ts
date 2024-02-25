@@ -6,11 +6,13 @@ import { ResetPlayerState } from '../src/models/ResetPlayerState';
 
 const io = new Server(8080, {
   cors: {
-    // origin: 'http://localhost:8081',
+    origin: 'http://localhost:8081',
     // origin: 'http://192.168.10.236:8081',
-    origin: 'http://192.168.10.210:8081',
+    // origin: 'http://127.0.0.1:8081',
   },
 });
+
+console.log("Server started");
 
 const gamePlayers: string[] = [];
 
