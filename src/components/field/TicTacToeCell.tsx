@@ -19,15 +19,15 @@ export default component$<ItemProps>((props) => {
   return (
     <button
       onClick$={() => (props.buttonClicked(props.position))}
-      class="w-full h-full border border-gray-600 grid grid-cols-1 items-center 
-        justify-center gap-2 bg-gray-50/20 rounded-none outline-none"
+      class="w-full h-full md:border border-[0.5px] border-gray-600 grid grid-cols-1 items-center 
+        justify-center gap-2 bg-gray-50/20 rounded-none outline-none px-2"
       disabled={props.gameField[props.position] !== ""
         || props.activePlayer !== props.player
         || props.gameFinished}
       key={props.position}
     >
       {
-        props.player 
+        props.player
         && props.gameField[props.position] === props.player
         && <Player1Icon playerIcon={props.playerIcon} />
       }

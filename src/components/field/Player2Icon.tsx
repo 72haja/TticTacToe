@@ -8,7 +8,7 @@ interface ItemProps {
 }
 
 export default component$<ItemProps>(({
-  size = "w-11/12",
+  size = "",
   ...props
 }) => {
 
@@ -17,7 +17,7 @@ export default component$<ItemProps>(({
   });
   
   const computedWrapperClass = useComputed$(() => {
-    return `w-full h-full flex items-center justify-center ${props.wrapperClass}`;
+    return `w-full h-full grid grid-cols-1 grid-rows-1 ${props.wrapperClass}`;
   })
 
   return (

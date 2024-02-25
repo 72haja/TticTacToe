@@ -42,7 +42,7 @@ export default component$<ItemProps>((props) => {
   });
 
   const computedClass = useComputed$(() => {
-    const defaultClass = "grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] border-2 border-gray-300";
+    const defaultClass = "grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] md:border-2 border border-gray-300";
 
     return props.disabled ?
       `${defaultClass} cursor-not-allowed opacity-50 pointer-events-none`  
