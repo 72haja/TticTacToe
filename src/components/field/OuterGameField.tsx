@@ -79,6 +79,7 @@ export default component$<ItemProps>((props) => {
 
     if (gameWon) {
       gameFinished.value = true;
+      allowedOuterGameField.value = null;
     }
 
     return gameWon;
@@ -163,12 +164,12 @@ export default component$<ItemProps>((props) => {
   })
 
   const resetGameField = $(() => {
-    const outerGameFields = Object.entries(outerGameField) as [OuterGameFieldPosition, { gameField: GameFieldModel }][];
-    outerGameFields.forEach(([_, gameFieldObj]) => {
+    Object.entries(outerGameField).forEach(([_, gameFieldObj]) => {
       const positions = Object.keys(gameFieldObj.gameField) as Position[];
       positions.forEach((position: Position) => {
         gameFieldObj.gameField[position] = "";
       });
+      gameFieldObj.fieldWinner = null;
     });
     gameFinished.value = false;
   })
