@@ -5,12 +5,8 @@ import ResponsiveFieldWrapper from "../responsiveFieldWrapper/ResponsiveFieldWra
 import OuterGameField from "./OuterGameField";
 import { ResetPlayerState } from "../../models/ResetPlayerState";
 import { IconName } from "../../models/IconName";
+import { PlayerData } from "../../models/PlayerData";
 
-
-interface PlayerData {
-  player: string;
-  players?: string[];
-}
 
 const room = "room1";
 
@@ -39,13 +35,19 @@ export default component$(() => {
 
   socket.on("self-join", (data: string) => {
     player.value = data;
-    socket.emit("join", { player: data, room });
+    const joinData: PlayerData = { player: data, room };
+    socket.emit("join", joinData);
   });
 
   socket.on("join", (data: PlayerData) => {
     if (data.player === player.value) return;
 
     player2.value = data.player;
+  });
+
+  const roomFull = useSignal(false);
+  socket.on("room-full", () => {
+    roomFull.value = true;
   });
 
   socket.on("set-player2", (data: PlayerData) => {
@@ -113,6 +115,7 @@ export default component$(() => {
           activePlayer={activePlayer.value}
           setActivePlayer={setActivePlayer}
           room={room}
+          roomFull={roomFull.value}
         />
       </ResponsiveFieldWrapper>
     </div>

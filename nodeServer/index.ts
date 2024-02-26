@@ -3,18 +3,19 @@ import { Server } from 'socket.io';
 import { SetPositionData } from '../src/models/SetPositionData';
 import { SetGameFieldData } from '../src/models/SetGameFieldData';
 import { ResetPlayerState } from '../src/models/ResetPlayerState';
+import { PlayerData } from '../src/models/PlayerData';
 
 const io = new Server(8080, {
   cors: {
-    origin: 'http://localhost:8081',
+    // origin: 'http://localhost:8081',
     // origin: 'http://192.168.10.236:8081',
-    // origin: 'http://127.0.0.1:8081',
+    origin: 'https://ttictactoe.onrender.com',
   },
 });
 
 console.log("Server started");
 
-const gamePlayers: string[] = [];
+const gameRooms: {[roomName: string]: string[]} = {};
 
 io.on('connection', (socket) => {
   console.log('made socket connection', socket.id);
@@ -37,29 +38,39 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', (data: PlayerData) => {
-    if (!gamePlayers.includes(data.player)) {
-      gamePlayers.push(data.player);
+    if (gameRooms[data.room] && gameRooms[data.room].length >= 2) {
+      socket.emit('room-full');
+      socket.disconnect();
+      return;
+    }
+    if(!gameRooms[data.room]) {
+      gameRooms[data.room] = [];
+    }
+    if (!gameRooms[data.room].includes(data.player)) {
+      gameRooms[data.room].push(data.player);
     }
     socket.to(connectionRoom).emit('join', { player: data.player });
 
-    if (gamePlayers.length === 1) {
+    if (gameRooms[data.room].length === 1) {
       socket.emit('your-are-player1');
     } else {
       socket.emit('your-are-player2');
     }
 
-    const player2 = gamePlayers.find(player => player !== socket.id);
+    const player2 = gameRooms[data.room].find(player => player !== socket.id);
     if (!player2) return;
 
     socket.emit('set-player2', { player: player2 });
   })
 
   socket.on('disconnect', () => {
-    gamePlayers.splice(gamePlayers.indexOf(socket.id), 1);
+    if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
+    gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
   });
 
   socket.on('reset-player-state', (data: ResetPlayerState) => {
+    if(!gameRooms[data.room] || gameRooms[data.room].indexOf(socket.id) === -1) return;
     socket.to(data.room).emit('reset-player-state', data);
   });
 
@@ -79,10 +90,6 @@ io.on('connection', (socket) => {
     socket.to(room).emit("new-game");
   })
 })
-
-interface PlayerData {
-  player: string;
-}
 
 interface SetActivePlayerData {
   room: string;

@@ -18,6 +18,7 @@ interface ItemProps {
   activePlayer: string;
   setActivePlayer: Function;
   room: string;
+  roomFull: boolean;
 }
 
 export default component$<ItemProps>((props) => {
@@ -196,36 +197,37 @@ export default component$<ItemProps>((props) => {
         />
         : ""
       }
-      {gameReady.value
-        ?
-        <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%]">
-          {(Object.entries(outerGameField) as [
-            OuterGameFieldPosition, { gameField: GameFieldModel }
-          ][])
-            .map(([outerGameFieldPosition, gameFieldObj]) => {
-              return (
-                <GameField
-                  key={outerGameFieldPosition}
-                  player={props.player}
-                  player2={props.player2}
-                  playerIcon={props.playerIcon}
-                  activePlayer={props.activePlayer}
-                  outerGameFieldPosition={outerGameFieldPosition}
-                  room={props.room}
-                  gameField={gameFieldObj.gameField}
-                  setPosition={setPosition}
-                  gameReady={gameReady.value}
-                  checkWinner={checkWinner}
-                  setActivePlayer={props.setActivePlayer}
-                  fieldWinner={outerGameField[outerGameFieldPosition].fieldWinner}
-                  disabled={!!allowedOuterGameField.value && allowedOuterGameField.value !== outerGameFieldPosition}
-                />
-              );
-            })
-          }
-        </div>
-
-        : <span> Waiting for player 2 {props.player2}</span>
+      {
+        props.roomFull
+          ? <span> Room is full. Please try another room</span>
+          : gameReady.value
+            ? <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%]">
+              {(Object.entries(outerGameField) as [
+                OuterGameFieldPosition, { gameField: GameFieldModel }
+              ][])
+                .map(([outerGameFieldPosition, gameFieldObj]) => {
+                  return (
+                    <GameField
+                      key={outerGameFieldPosition}
+                      player={props.player}
+                      player2={props.player2}
+                      playerIcon={props.playerIcon}
+                      activePlayer={props.activePlayer}
+                      outerGameFieldPosition={outerGameFieldPosition}
+                      room={props.room}
+                      gameField={gameFieldObj.gameField}
+                      setPosition={setPosition}
+                      gameReady={gameReady.value}
+                      checkWinner={checkWinner}
+                      setActivePlayer={props.setActivePlayer}
+                      fieldWinner={outerGameField[outerGameFieldPosition].fieldWinner}
+                      disabled={!!allowedOuterGameField.value && allowedOuterGameField.value !== outerGameFieldPosition}
+                    />
+                  );
+                })
+              }
+            </div>
+            : <span> Waiting for player 2 {props.player2}</span>
       }
     </div>
   );
