@@ -1,11 +1,11 @@
 import { $, component$, useComputed$, useSignal } from "@builder.io/qwik";
 import { GameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
-import TicTacToeCell from "./TicTacToeCell.tsx";
 import { SetPositionData } from "../../models/SetPositionData.ts";
+import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
 import Player1Icon from "./Player1Icon.tsx";
 import Player2Icon from "./Player2Icon.tsx";
-import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
-import { Socket } from "socket.io-client";
+import TicTacToeCell from "./TicTacToeCell.tsx";
+import { socket } from "./Field.tsx";
 
 interface ItemProps {
   player: any;
@@ -21,7 +21,6 @@ interface ItemProps {
   checkWinner: Function;
   fieldWinner: string | null;
   disabled: boolean;
-  socket: Socket;
 }
 
 export default component$<ItemProps>((props) => {
@@ -35,7 +34,7 @@ export default component$<ItemProps>((props) => {
       allowedOuterGameField: getAllowedOuterGameField(pos),
     };
     props.setPosition(props.outerGameFieldPosition, pos, props.player);
-    props.socket.emit("set-position", setPositionData);
+    socket.emit("set-position", setPositionData);
     if (await props.checkWinner(props.outerGameFieldPosition)) {
       return;
     }

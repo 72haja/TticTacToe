@@ -20,14 +20,12 @@ const gameRooms: {[roomName: string]: string[]} = {};
 io.on('connection', (socket) => {
   console.log('made socket connection', socket.id);
 
-  const connectionRoom = socket.request.headers.room as string ?? 'default';
-  socket.join(connectionRoom);
-
-  console.log("rooms", socket.rooms);
-
   // Send data to everyone who is connected
+  
+  socket.on("self-join", (room: string) => {
+    socket.join(room);
+    console.log("rooms", socket.rooms);
 
-  socket.on("self-join", () => {
     setTimeout(() => {
       socket.emit("self-join", socket.id);
     }, 200);
@@ -49,7 +47,7 @@ io.on('connection', (socket) => {
     if (!gameRooms[data.room].includes(data.player)) {
       gameRooms[data.room].push(data.player);
     }
-    socket.to(connectionRoom).emit('join', { player: data.player });
+    socket.to(data.room).emit('join', { player: data.player });
 
     if (gameRooms[data.room].length === 1) {
       socket.emit('your-are-player1');
@@ -63,8 +61,25 @@ io.on('connection', (socket) => {
     socket.emit('set-player2', { player: player2 });
   })
 
+  socket.on("request-join", (room: string) => {
+    if(!gameRooms[room]) {
+      socket.emit("room-not-found");
+      return;
+    }
+    if(gameRooms[room].length >= 2) {
+      socket.emit("room-full");
+      return;
+    }
+    socket.emit("joined", room);
+  })
+
   socket.on('disconnect', () => {
-    if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
+    const connectionRoom = getConnectionRoom(socket.id);
+    if(
+      !connectionRoom
+      || !gameRooms[connectionRoom]
+      || gameRooms[connectionRoom].indexOf(socket.id) === -1
+    ) return;
     gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
   });
@@ -94,4 +109,8 @@ io.on('connection', (socket) => {
 interface SetActivePlayerData {
   room: string;
   player: string;
+}
+
+function getConnectionRoom(player: string, ) {
+  return Object.entries(gameRooms).find(([_, players]) => players.includes(player))?.[0];
 }

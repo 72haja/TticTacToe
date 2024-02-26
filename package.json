@@ -10,7 +10,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "server": "ts-node --esm nodeServer/index.ts",
-    "server-js": "node nodeServer/index.js"
+    "server-js": "node nodeServer/index.js",
+    "build-server": "tsc --target esnext nodeServer/index.ts"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.5",
@@ -24,7 +25,7 @@
     "vite": "^4.4.5"
   },
   "dependencies": {
-    "@builder.io/qwik": "^1.2.6",
+    "@builder.io/qwik": "^1.4.5",
     "@qwikest/icons": "^0.0.13",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",

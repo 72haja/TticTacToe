@@ -2,7 +2,7 @@ import { $, component$ } from "@builder.io/qwik";
 import Player1Icon from "./Player1Icon";
 import Player2Icon from "./Player2Icon";
 
-import { Socket } from "socket.io-client";
+import { socket } from "./Field";
 
 interface ItemProps {
   playerIcon: string;
@@ -11,18 +11,17 @@ interface ItemProps {
   player2: string;
   room: string;
   onNewGame: Function;
-  socket: Socket;
 }
 
 export default component$<ItemProps>((props) => {
   const emitNewGame = $(() => {
-    props.socket.emit("new-game", props.room);
-    
+    socket.emit("new-game", props.room);
+
     const nextActivePlayer = props.activePlayer === props.player
-    ? props.player2
-    : props.player;
-    
-    props.socket.emit("set-active-player", {
+      ? props.player2
+      : props.player;
+
+    socket.emit("set-active-player", {
       player: nextActivePlayer,
       room: props.room,
     });
@@ -38,8 +37,8 @@ export default component$<ItemProps>((props) => {
           ? <Player1Icon
             playerIcon={props.playerIcon}
             size="w-[60px]"
-            />
-            : <Player2Icon
+          />
+          : <Player2Icon
             playerIcon={props.playerIcon}
             size="w-[60px]"
           />

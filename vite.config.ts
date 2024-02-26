@@ -7,4 +7,9 @@ export default defineConfig({
       csr: true,
     }),
   ],
+  preview: {
+    headers: {
+      'Cache-Control': 'public, max-age=600',
+    },
+  },
 });
