@@ -11,6 +11,7 @@ import { PlayerData } from "../../models/PlayerData";
 const room = "room1";
 
 const URL = "https://ttictactoe-server.onrender.com";
+// const URL = "http://localhost:8080";
 export const socket = io(URL, {
   extraHeaders: {
     "room": room,
