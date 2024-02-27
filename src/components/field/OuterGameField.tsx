@@ -1,22 +1,24 @@
 import { $, component$, useContext, useSignal, useStore, useTask$ } from "@builder.io/qwik";
+import type { QRL } from "@builder.io/qwik";
 import { v4 as uuid } from "uuid";
-import { GameField as GameFieldModel, OuterGameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
-import { SetGameFieldData } from "../../models/SetGameFieldData.ts";
-import { SetPositionData } from "../../models/SetPositionData.ts";
-import { SnackbarCTX, SnackbarState, SnackbarType } from "../../store/SnackbarStore.ts";
-import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
-import { initOuterGameField } from "../../utils/initGameField.ts";
-import GameField from "./GameField.tsx";
-import VictoryDialog from "./VictoryDialog.tsx";
-import { ResetPlayerState } from "../../models/ResetPlayerState.ts";
-import { socket } from "./Field.tsx";
+import type { GameField as GameFieldModel, OuterGameField, OuterGameFieldPosition, Position } from "../../models/GameField";
+import type { SetGameFieldData } from "../../models/SetGameFieldData";
+import type { SetPositionData } from "../../models/SetPositionData";
+import { SnackbarCTX } from "../../store/SnackbarStore";
+import type { SnackbarState, SnackbarType } from "../../store/SnackbarStore";
+import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField";
+import { initOuterGameField } from "../../utils/initGameField";
+import GameField from "./GameField";
+import VictoryDialog from "./VictoryDialog";
+import type { ResetPlayerState } from "../../models/ResetPlayerState";
+import { socket } from "./Field";
 
 interface ItemProps {
   player: any;
   player2: any;
   playerIcon: any;
   activePlayer: string;
-  setActivePlayer: Function;
+  setActivePlayer$: QRL<Function>;
   room: string;
   roomFull: boolean;
 }
@@ -130,7 +132,7 @@ export default component$<ItemProps>((props) => {
         showSnackbar("Spieler 2 hat das Spiel verlassen", "error");
       }
       return
-    };
+    }
     checkAndReplaceOldPlayerInField(newPlayer2)
     gameReady.value = true;
     showSnackbar("Spieler 2 ist beigetreten", "success");
@@ -165,7 +167,7 @@ export default component$<ItemProps>((props) => {
   })
 
   const resetGameField = $(() => {
-    Object.entries(outerGameField).forEach(([_, gameFieldObj]) => {
+    Object.entries(outerGameField).forEach(([, gameFieldObj]) => {
       const positions = Object.keys(gameFieldObj.gameField) as Position[];
       positions.forEach((position: Position) => {
         gameFieldObj.gameField[position] = "";
@@ -176,7 +178,7 @@ export default component$<ItemProps>((props) => {
   })
 
   const handleOnNewGame = $((data: string) => {
-    props.setActivePlayer(data);
+    props.setActivePlayer$(data);
     resetGameField()
   });
 
@@ -193,7 +195,7 @@ export default component$<ItemProps>((props) => {
           player2={props.player2}
           activePlayer={props.activePlayer}
           room={props.room}
-          onNewGame={handleOnNewGame}
+          onNewGame$={handleOnNewGame}
         />
         : ""
       }
@@ -216,10 +218,10 @@ export default component$<ItemProps>((props) => {
                       outerGameFieldPosition={outerGameFieldPosition}
                       room={props.room}
                       gameField={gameFieldObj.gameField}
-                      setPosition={setPosition}
+                      setPosition$={setPosition}
                       gameReady={gameReady.value}
-                      checkWinner={checkWinner}
-                      setActivePlayer={props.setActivePlayer}
+                      checkWinner$={checkWinner}
+                      setActivePlayer$={props.setActivePlayer$}
                       fieldWinner={outerGameField[outerGameFieldPosition].fieldWinner}
                       disabled={!!allowedOuterGameField.value && allowedOuterGameField.value !== outerGameFieldPosition}
                     />

@@ -1,12 +1,16 @@
-import { $, component$, useSignal } from "@builder.io/qwik";
+import { $, component$, useContextProvider, useSignal, useStore } from "@builder.io/qwik";
 import type { Signal } from "@builder.io/qwik";
 import { io } from "socket.io-client";
-import GameMetaInfo from "./GameMetaInfo";
-import ResponsiveFieldWrapper from "../responsiveFieldWrapper/ResponsiveFieldWrapper";
-import OuterGameField from "./OuterGameField";
-import type { ResetPlayerState } from "../../models/ResetPlayerState";
-import type { IconName } from "../../models/IconName";
-import type { PlayerData } from "../../models/PlayerData";
+import GameMetaInfo from "../../../components/field/GameMetaInfo";
+import ResponsiveFieldWrapper from "../../../components/responsiveFieldWrapper/ResponsiveFieldWrapper";
+import OuterGameField from "../../../components/field/OuterGameField";
+import type { ResetPlayerState } from "../../../models/ResetPlayerState";
+import type { IconName } from "../../../models/IconName";
+import type { PlayerData } from "../../../models/PlayerData";
+import Snackbar from "~/components/snackbar/Snackbar";
+import type { SnackbarState } from "../../../store/SnackbarStore";
+import { SnackbarCTX } from "../../../store/SnackbarStore";
+import { v4 as uuid } from "uuid";
 
 // const URL = "https://ttictactoe-server.onrender.com";
 const URL = "http://localhost:8080";
@@ -24,6 +28,17 @@ type Props = {
 
 export default component$<Props>((props) => {
   socket.emit("self-join", props.room);
+
+
+  const snackbarStore = useStore<SnackbarState>({
+    show: false,
+    text: "",
+    timeout: 3000,
+    type: "success",
+    id: uuid(),
+  });
+
+  useContextProvider(SnackbarCTX, snackbarStore);
 
   const player = useSignal("");
   const playerIcon: Signal<IconName> = useSignal("CilCircle");
@@ -100,23 +115,27 @@ export default component$<Props>((props) => {
   });
 
   return (
-    <div class="w-full h-full flex flex-col gap-2 items-center justify-center">
-      <GameMetaInfo
-        playerIcon={playerIcon.value}
-        activePlayer={activePlayer.value}
-        player={player.value}
-      />
-      <ResponsiveFieldWrapper>
-        <OuterGameField
-          player={player.value}
-          player2={player2.value}
+    <div class="bg-gray-500 flex items-center justify-center w-full h-full p-12">
+      <div class="w-full h-full flex flex-col gap-2 items-center justify-center">
+        <GameMetaInfo
           playerIcon={playerIcon.value}
           activePlayer={activePlayer.value}
-          setActivePlayer$={setActivePlayer}
-          room={props.room}
-          roomFull={roomFull.value}
+          player={player.value}
         />
-      </ResponsiveFieldWrapper>
+        <ResponsiveFieldWrapper>
+          <OuterGameField
+            player={player.value}
+            player2={player2.value}
+            playerIcon={playerIcon.value}
+            activePlayer={activePlayer.value}
+            setActivePlayer$={setActivePlayer}
+            room={props.room}
+            roomFull={roomFull.value}
+          />
+        </ResponsiveFieldWrapper>
+
+        <Snackbar />
+      </div>
     </div>
   );
 });

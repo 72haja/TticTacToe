@@ -1,4 +1,4 @@
-import { OuterGameFieldPosition, Position } from "../models/GameField";
+import type { OuterGameFieldPosition, Position } from "../models/GameField";
 
 export function getAllowedOuterGameField(pos: Position): OuterGameFieldPosition {
   switch (pos) {

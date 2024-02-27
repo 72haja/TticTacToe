@@ -1,3 +1,4 @@
+import type { QRL } from "@builder.io/qwik";
 import { $, component$ } from "@builder.io/qwik";
 import Player1Icon from "./Player1Icon";
 import Player2Icon from "./Player2Icon";
@@ -10,7 +11,7 @@ interface ItemProps {
   activePlayer: string;
   player2: string;
   room: string;
-  onNewGame: Function;
+  onNewGame$: QRL<(nextActivePlayer: string) => void>;
 }
 
 export default component$<ItemProps>((props) => {
@@ -26,7 +27,9 @@ export default component$<ItemProps>((props) => {
       room: props.room,
     });
 
-    props.onNewGame(nextActivePlayer);
+
+
+    props.onNewGame$(nextActivePlayer);
   });
 
   return (
@@ -44,7 +47,7 @@ export default component$<ItemProps>((props) => {
           />
         }
         <button
-          onClick$={() => emitNewGame()}
+          onClick$={emitNewGame}
           class="bg-white text-green-800 rounded-lg p-2 md:col-span-1 col-span-2"
         >
           Neues Spiel

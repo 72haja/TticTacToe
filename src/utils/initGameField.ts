@@ -1,4 +1,4 @@
-import { GameField, OuterGameField } from "../models/GameField";
+import type { GameField, OuterGameField } from "../models/GameField";
 
 export function initGameField(): GameField {
   return {

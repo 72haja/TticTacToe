@@ -9,7 +9,8 @@ const io = new Server(8080, {
   cors: {
     // origin: 'http://localhost:8081',
     // origin: 'http://192.168.10.236:8081',
-    origin: 'https://ttictactoe.onrender.com',
+    origin: 'http://localhost:5173',
+    // origin: 'https://ttictactoe.onrender.com',
   },
 });
 

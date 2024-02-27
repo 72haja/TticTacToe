@@ -1,5 +1,5 @@
-import { OuterGameFieldPosition } from "./GameField";
-import { IconName } from "./IconName";
+import type { OuterGameFieldPosition } from "./GameField";
+import type { IconName } from "./IconName";
 
 export type ResetPlayerState = {
   room: string;

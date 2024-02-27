@@ -1,4 +1,4 @@
-import { GameField, OuterGameFieldPosition } from "./GameField";
+import type { GameField, OuterGameFieldPosition } from "./GameField";
 
 export type SetGameFieldData = {
   room: string, 

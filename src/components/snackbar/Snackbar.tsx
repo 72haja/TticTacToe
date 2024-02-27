@@ -1,6 +1,7 @@
 import { component$, useComputed$, useContext, useSignal, useTask$ } from "@builder.io/qwik";
 import { FaCircleCheckRegular } from "@qwikest/icons/font-awesome";
-import { SnackbarCTX, SnackbarState } from "../../store/SnackbarStore";
+import type { SnackbarState } from "../../store/SnackbarStore";
+import { SnackbarCTX } from "../../store/SnackbarStore";
 
 export default component$(() => {
 
@@ -17,7 +18,7 @@ export default component$(() => {
         clearTimeout(timeout.value);
       }
 
-      timeout.value = setTimeout(() => {
+      setTimeout(() => {
         snackbarCTX.show = false;
       }, snackbarCTX.timeout) as unknown as number;
     }

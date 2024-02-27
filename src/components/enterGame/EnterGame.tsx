@@ -1,8 +1,9 @@
-import { component$, useComputed$, useSignal } from "@builder.io/qwik";
+import { $, component$, useComputed$, useSignal } from "@builder.io/qwik";
+import type { QRL } from "@builder.io/qwik";
 
 type EnterGameProps = {
-  newGame: Function;
-  enterGame: Function;
+  newGame$: QRL<Function>;
+  enterGame$: QRL<Function>;
 };
 
 export const EnterGame = component$<EnterGameProps>((props) => {
@@ -16,12 +17,16 @@ export const EnterGame = component$<EnterGameProps>((props) => {
       : `${defaultBtnClass} cursor-not-allowed opacity-50 pointer-events-none`
   })
 
+  const onInput = $((e: Event) => {
+    gameId.value = (e.target as HTMLInputElement).value;
+  });
+
   return (
     <div class="p-4 2xl:p-10 flex flex-col gap-10 w-full items-center">
       <h1 class="text-4xl 2xl:text-6xl text-center">T -Tic Tac Toe</h1>
       <div class="flex flex-col gap-4 items-stretch w-full md:w-[500px]">
         <button class={defaultBtnClass}
-          onClick$={() => props.newGame()}
+          onClick$={() => props.newGame$()}
         >
           <span class="text-2xl 2xl:text-4xl text-center">Neues Spiel</span>
         </button>
@@ -37,11 +42,11 @@ export const EnterGame = component$<EnterGameProps>((props) => {
             focus-within:outline-2 focus-within:outline-gray-700 rounded-lg bg-gray-300 text-gray-700 
             placeholder:text-gray-500"
           placeholder="Spiele-ID/Url eingeben"
-          onInput$={(e) => gameId.value = (e.target as HTMLInputElement).value}
+          onInput$={onInput}
         />
 
         <button class={disabledBtnClass}
-          onClick$={() => props.enterGame(gameId.value)}
+          onClick$={() => props.enterGame$(gameId.value)}
         >
           <span class="text-2xl 2xl:text-4xl text-center">Spiel beitreten</span>
         </button>

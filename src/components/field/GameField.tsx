@@ -1,26 +1,27 @@
 import { $, component$, useComputed$, useSignal } from "@builder.io/qwik";
-import { GameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
-import { SetPositionData } from "../../models/SetPositionData.ts";
-import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
-import Player1Icon from "./Player1Icon.tsx";
-import Player2Icon from "./Player2Icon.tsx";
-import TicTacToeCell from "./TicTacToeCell.tsx";
-import { socket } from "./Field.tsx";
+import type { QRL } from "@builder.io/qwik";
+import type { GameField, OuterGameFieldPosition, Position } from "../../models/GameField";
+import type { SetPositionData } from "../../models/SetPositionData";
+import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField";
+import Player1Icon from "./Player1Icon";
+import Player2Icon from "./Player2Icon";
+import TicTacToeCell from "./TicTacToeCell";
+import { socket } from "./Field";
 
 interface ItemProps {
   player: any;
   player2: any;
   playerIcon: any;
   activePlayer: string;
-  setActivePlayer: Function;
   outerGameFieldPosition: OuterGameFieldPosition;
   room: string;
   gameField: GameField;
-  setPosition: Function;
   gameReady: boolean;
-  checkWinner: Function;
   fieldWinner: string | null;
   disabled: boolean;
+  setPosition$: QRL<Function>;
+  setActivePlayer$: QRL<Function>;
+  checkWinner$: QRL<Function>;
 }
 
 export default component$<ItemProps>((props) => {
@@ -33,12 +34,12 @@ export default component$<ItemProps>((props) => {
       position: pos,
       allowedOuterGameField: getAllowedOuterGameField(pos),
     };
-    props.setPosition(props.outerGameFieldPosition, pos, props.player);
+    props.setPosition$(props.outerGameFieldPosition, pos, props.player);
     socket.emit("set-position", setPositionData);
-    if (await props.checkWinner(props.outerGameFieldPosition)) {
+    if (await props.checkWinner$(props.outerGameFieldPosition)) {
       return;
     }
-    props.setActivePlayer(props.player2);
+    props.setActivePlayer$(props.player2);
   });
 
   const computedClass = useComputed$(() => {
@@ -64,7 +65,7 @@ export default component$<ItemProps>((props) => {
                 activePlayer={props.activePlayer}
                 position={position}
                 gameField={props.gameField}
-                buttonClicked={sendPosition}
+                buttonClicked$={sendPosition}
                 gameFinished={gameFinished.value}
               />
             );

@@ -7,17 +7,14 @@ interface ItemProps {
   wrapperClass?: string;
 }
 
-export default component$<ItemProps>(({
-  size = "",
-  ...props
-}) => {
+export default component$<ItemProps>((props) => {
 
   const computedClass = useComputed$(() => {
-    return `${size} aspect-square`;
+    return `${props.size ?? ''} aspect-square`;
   });
   
   const computedWrapperClass = useComputed$(() => {
-    return `w-full h-full grid grid-cols-1 grid-rows-1 ${props.wrapperClass}`;
+    return `w-full h-full grid grid-cols-1 grid-rows-1 ${props.wrapperClass ?? ""}`;
   })
 
   return (

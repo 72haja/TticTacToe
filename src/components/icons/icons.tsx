@@ -1,4 +1,4 @@
-import { QwikIntrinsicElements } from "@builder.io/qwik"
+import type { QwikIntrinsicElements } from "@builder.io/qwik"
 
 export function CilCircle(props: QwikIntrinsicElements['svg'], key: string) {
   return (
