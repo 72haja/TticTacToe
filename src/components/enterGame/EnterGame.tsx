@@ -9,7 +9,7 @@ export const EnterGame = component$<EnterGameProps>((props) => {
 
   const gameId = useSignal("");
 
-  const defaultBtnClass = "w-full h-full md:border border-[0.5px] border-gray-600 grid grid-cols-1 items-center justify-center gap-2 bg-gray-600 active:bg-gray-700 rounded-lg outline-none px-2"
+  const defaultBtnClass = "w-full h-full md:border border-[0.5px] border-gray-600 items-center justify-center bg-gray-600 active:bg-gray-700 rounded-lg outline-none px-2"
   const disabledBtnClass = useComputed$(() => {
     return gameId.value.length > 0
       ? defaultBtnClass

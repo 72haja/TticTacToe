@@ -1,11 +1,11 @@
-import { $, component$, useComputed$, useContextProvider, useSignal, useStore, useTask$ } from "@builder.io/qwik";
+import { $, component$, useContextProvider, useSignal, useStore, useTask$ } from "@builder.io/qwik";
 
+import { v4 as uuid } from "uuid";
 import "./app.css";
+import { EnterGame } from "./components/enterGame/EnterGame.tsx";
 import Field, { socket } from "./components/field/Field.tsx";
 import Snackbar from "./components/snackbar/Snackbar.tsx";
 import { SnackbarCTX, SnackbarState } from "./store/SnackbarStore.ts";
-import { v4 as uuid } from "uuid";
-import { EnterGame } from "./components/enterGame/EnterGame.tsx";
 
 export const App = component$(() => {
 
