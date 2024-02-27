@@ -11,6 +11,7 @@ import Snackbar from "~/components/snackbar/Snackbar";
 import type { SnackbarState } from "../../../store/SnackbarStore";
 import { SnackbarCTX } from "../../../store/SnackbarStore";
 import { v4 as uuid } from "uuid";
+import { useLocation } from "@builder.io/qwik-city";
 
 // const URL = "https://ttictactoe-server.onrender.com";
 const URL = "http://localhost:8080";
@@ -21,14 +22,13 @@ socket.onAny((event, ...args) => {
 });
 
 socket.connect();
+console.log("socket connected");
 
-type Props = {
-  room: string;
-};
 
-export default component$<Props>((props) => {
-  socket.emit("self-join", props.room);
+export default component$(() => {
+  const room = useLocation().params.room;
 
+  socket.emit("self-join", room);
 
   const snackbarStore = useStore<SnackbarState>({
     show: false,
@@ -48,8 +48,9 @@ export default component$<Props>((props) => {
   const activePlayerAfterPlayerLeft: Signal<IconName | ""> = useSignal("");
 
   socket.on("self-join", (data: string) => {
+    console.log('self-join', data);
     player.value = data;
-    const joinData: PlayerData = { player: data, room: props.room };
+    const joinData: PlayerData = { player: data, room };
     socket.emit("join", joinData);
   });
 
@@ -87,7 +88,7 @@ export default component$<Props>((props) => {
 
   const setActivePlayer = $((player: string) => {
     activePlayer.value = player;
-    socket.emit("set-active-player", { player, room: props.room });
+    socket.emit("set-active-player", { player, room });
   });
 
   socket.on("set-active-player", (playerProp: string) => {
@@ -129,7 +130,7 @@ export default component$<Props>((props) => {
             playerIcon={playerIcon.value}
             activePlayer={activePlayer.value}
             setActivePlayer$={setActivePlayer}
-            room={props.room}
+            room={room}
             roomFull={roomFull.value}
           />
         </ResponsiveFieldWrapper>

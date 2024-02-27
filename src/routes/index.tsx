@@ -59,13 +59,6 @@ export default component$(() => {
     snackbarStore.type = "error";
   });
 
-  socket.on("room-not-found", () => {
-    console.log("room-not-found");
-    snackbarStore.show = true;
-    snackbarStore.text = "Room not found";
-    snackbarStore.type = "error";
-  });
-
   socket.on("joined", (roomId) => {
     snackbarStore.show = true;
     snackbarStore.text = "Joined game";

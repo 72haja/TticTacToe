@@ -9,7 +9,7 @@ const io = new Server(8080, {
   cors: {
     // origin: 'http://localhost:8081',
     // origin: 'http://192.168.10.236:8081',
-    origin: 'http://localhost:5173',
+    origin: 'http://192.168.10.236:5173',
     // origin: 'https://ttictactoe.onrender.com',
   },
 });
@@ -37,7 +37,10 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', (data: PlayerData) => {
-    if (gameRooms[data.room] && gameRooms[data.room].length >= 2) {
+    console.log('🚀 ~ socket.on ~ data:', data);
+    const joinedPlayerIsInRoom = Object.entries(gameRooms).find(([_, players]) => players.includes(data.player));
+    console.log('🚀 ~ socket.on ~ joinedPlayerIsInRoom:', joinedPlayerIsInRoom);
+    if (!joinedPlayerIsInRoom && gameRooms[data.room] && gameRooms[data.room].length >= 2) {
       socket.emit('room-full');
       socket.disconnect();
       return;
@@ -49,7 +52,7 @@ io.on('connection', (socket) => {
       gameRooms[data.room].push(data.player);
     }
     socket.to(data.room).emit('join', { player: data.player });
-
+    console.log('gameRooms[data.room]', gameRooms, data.player);
     if (gameRooms[data.room].length === 1) {
       socket.emit('your-are-player1');
     } else {
