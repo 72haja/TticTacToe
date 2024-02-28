@@ -1,23 +1,22 @@
 import { $, component$, useContext, useSignal, useStore, useTask$ } from "@builder.io/qwik";
-import type { QRL } from "@builder.io/qwik";
 import { v4 as uuid } from "uuid";
 import { GameField as GameFieldModel, OuterGameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
+import { ResetPlayerState } from "../../models/ResetPlayerState.ts";
 import { SetGameFieldData } from "../../models/SetGameFieldData.ts";
 import { SetPositionData } from "../../models/SetPositionData.ts";
 import { SnackbarCTX, SnackbarState, SnackbarType } from "../../store/SnackbarStore.ts";
 import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
 import { initOuterGameField } from "../../utils/initGameField.ts";
+import { socket } from "./Field.tsx";
 import GameField from "./GameField.tsx";
 import VictoryDialog from "./VictoryDialog.tsx";
-import { ResetPlayerState } from "../../models/ResetPlayerState.ts";
-import { socket } from "./Field.tsx";
 
 interface ItemProps {
   player: any;
   player2: any;
   playerIcon: any;
   activePlayer: string;
-  setActivePlayer$: QRL<Function>;
+  setActivePlayer$: Function;
   room: string;
   roomFull: boolean;
 }
@@ -82,7 +81,7 @@ export default component$<ItemProps>((props) => {
     })
 
     gameDraw.value = !gameWon && Object.values(outerGameField).every(
-      (field) => field.gameField 
+      (field) => field.gameField
         && Object.values(field.gameField).every((value) => value !== "")
     );
     console.log('gameDraw.value', gameDraw.value);

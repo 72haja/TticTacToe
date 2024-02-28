@@ -1,5 +1,4 @@
 import { component$ } from "@builder.io/qwik";
-import type { QRL } from "@builder.io/qwik";
 
 import { GameField, Position } from "../../models/GameField";
 import Player1Icon from "./Player1Icon";
@@ -12,7 +11,7 @@ interface ItemProps {
   activePlayer: string;
   position: Position;
   gameField: GameField;
-  buttonClicked$: QRL<Function>;
+  buttonClicked$: Function;
   gameFinished: boolean;
 }
 

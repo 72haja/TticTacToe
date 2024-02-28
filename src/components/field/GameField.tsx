@@ -1,12 +1,11 @@
 import { $, component$, useComputed$, useSignal } from "@builder.io/qwik";
-import type { QRL } from "@builder.io/qwik";
 import { GameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
-import TicTacToeCell from "./TicTacToeCell.tsx";
 import { SetPositionData } from "../../models/SetPositionData.ts";
-import Player1Icon from "./Player1Icon.tsx";
-import Player2Icon from "./Player2Icon.tsx";
 import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
 import { socket } from "./Field.tsx";
+import Player1Icon from "./Player1Icon.tsx";
+import Player2Icon from "./Player2Icon.tsx";
+import TicTacToeCell from "./TicTacToeCell.tsx";
 
 interface ItemProps {
   player: any;
@@ -19,9 +18,9 @@ interface ItemProps {
   gameReady: boolean;
   fieldWinner: string | null;
   disabled: boolean;
-  setActivePlayer$: QRL<Function>;
-  setPosition$: QRL<Function>;
-  checkWinner$: QRL<Function>;
+  setActivePlayer$: Function;
+  setPosition$: Function;
+  checkWinner$: Function;
 }
 
 export default component$<ItemProps>((props) => {

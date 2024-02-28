@@ -1,8 +1,7 @@
 import { $, component$ } from "@builder.io/qwik";
-import type { QRL } from "@builder.io/qwik";
+import { socket } from "./Field.tsx";
 import Player1Icon from "./Player1Icon";
 import Player2Icon from "./Player2Icon";
-import { socket } from "./Field.tsx";
 
 interface ItemProps {
   playerIcon: string;
@@ -11,17 +10,17 @@ interface ItemProps {
   player2: string;
   room: string;
   gameDraw: boolean;
-  onNewGame$: QRL<Function>;
+  onNewGame$: Function;
 }
 
 export default component$<ItemProps>((props) => {
   const emitNewGame = $(() => {
     socket.emit("new-game", props.room);
-    
+
     const nextActivePlayer = props.activePlayer === props.player
-    ? props.player2
-    : props.player;
-    
+      ? props.player2
+      : props.player;
+
     socket.emit("set-active-player", {
       player: nextActivePlayer,
       room: props.room,
@@ -36,11 +35,11 @@ export default component$<ItemProps>((props) => {
         {props.gameDraw
           && <span>Unentschieden</span>
         }
-        
+
         {!props.gameDraw
           && <span>Gewonnen hat Spieler: </span>
         }
-        
+
         {!props.gameDraw && props.activePlayer === props.player
           ? <Player1Icon
             playerIcon={props.playerIcon}
