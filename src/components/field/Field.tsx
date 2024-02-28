@@ -7,9 +7,16 @@ import { ResetPlayerState } from "../../models/ResetPlayerState";
 import { IconName } from "../../models/IconName";
 import { PlayerData } from "../../models/PlayerData";
 
+
+const room = "room1";
+
 const URL = "https://ttictactoe-server.onrender.com";
 // const URL = "http://localhost:8080";
-export const socket = io(URL);
+export const socket = io(URL, {
+  extraHeaders: {
+    "room": room,
+  },
+});
 
 socket.onAny((event, ...args) => {
   console.log("onAny", event, args);
@@ -17,13 +24,9 @@ socket.onAny((event, ...args) => {
 
 socket.connect();
 
-type Props = {
-  room: string;
-};
+socket.emit("self-join");
 
-export default component$<Props>((props) => {
-  socket.emit("self-join", props.room);
-
+export default component$(() => {
   const player = useSignal("");
   const playerIcon: Signal<IconName> = useSignal("CilCircle");
   const player2 = useSignal("");
@@ -33,7 +36,7 @@ export default component$<Props>((props) => {
 
   socket.on("self-join", (data: string) => {
     player.value = data;
-    const joinData: PlayerData = { player: data, room: props.room };
+    const joinData: PlayerData = { player: data, room };
     socket.emit("join", joinData);
   });
 
@@ -71,7 +74,7 @@ export default component$<Props>((props) => {
 
   const setActivePlayer = $((player: string) => {
     activePlayer.value = player;
-    socket.emit("set-active-player", { player, room: props.room });
+    socket.emit("set-active-player", { player, room });
   });
 
   socket.on("set-active-player", (playerProp: string) => {
@@ -112,7 +115,7 @@ export default component$<Props>((props) => {
           playerIcon={playerIcon.value}
           activePlayer={activePlayer.value}
           setActivePlayer={setActivePlayer}
-          room={props.room}
+          room={room}
           roomFull={roomFull.value}
         />
       </ResponsiveFieldWrapper>

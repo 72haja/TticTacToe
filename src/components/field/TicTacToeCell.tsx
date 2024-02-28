@@ -20,7 +20,7 @@ export default component$<ItemProps>((props) => {
     <button
       onClick$={() => (props.buttonClicked(props.position))}
       class="w-full h-full md:border border-[0.5px] border-gray-600 grid grid-cols-1 items-center 
-        justify-center gap-2 bg-gray-50/20 hover:border-[#646cff] rounded-none outline-none px-2"
+        justify-center gap-2 bg-gray-50/20 hover:bg-[#646cff] rounded-none outline-none px-2"
       disabled={props.gameField[props.position] !== ""
         || props.activePlayer !== props.player
         || props.gameFinished}
