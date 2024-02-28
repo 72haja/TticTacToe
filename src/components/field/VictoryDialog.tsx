@@ -1,8 +1,8 @@
 import { $, component$ } from "@builder.io/qwik";
+import type { QRL } from "@builder.io/qwik";
 import Player1Icon from "./Player1Icon";
 import Player2Icon from "./Player2Icon";
-
-import { Socket } from "socket.io-client";
+import { socket } from "./Field.tsx";
 
 interface ItemProps {
   playerIcon: string;
@@ -10,36 +10,43 @@ interface ItemProps {
   activePlayer: string;
   player2: string;
   room: string;
-  onNewGame: Function;
-  socket: Socket;
+  gameDraw: boolean;
+  onNewGame$: QRL<Function>;
 }
 
 export default component$<ItemProps>((props) => {
   const emitNewGame = $(() => {
-    props.socket.emit("new-game", props.room);
+    socket.emit("new-game", props.room);
     
     const nextActivePlayer = props.activePlayer === props.player
     ? props.player2
     : props.player;
     
-    props.socket.emit("set-active-player", {
+    socket.emit("set-active-player", {
       player: nextActivePlayer,
       room: props.room,
     });
 
-    props.onNewGame(nextActivePlayer);
+    props.onNewGame$(nextActivePlayer);
   });
 
   return (
     <div class="absolute top-0 left-0 z-10 w-full h-full flex items-center justify-center">
       <div class="grid md:grid-cols-[max-content_1fr_max-content] grid-cols-[max-content_1fr] items-center h-max gap-4 w-full max-w-md p-4 rounded-xl bg-green-800 text-white shadow-lg">
-        <span>Gewonnen hat Spieler: </span>
-        {props.activePlayer === props.player
+        {props.gameDraw
+          && <span>Unentschieden</span>
+        }
+        
+        {!props.gameDraw
+          && <span>Gewonnen hat Spieler: </span>
+        }
+        
+        {!props.gameDraw && props.activePlayer === props.player
           ? <Player1Icon
             playerIcon={props.playerIcon}
             size="w-[60px]"
-            />
-            : <Player2Icon
+          />
+          : !props.gameDraw && <Player2Icon
             playerIcon={props.playerIcon}
             size="w-[60px]"
           />

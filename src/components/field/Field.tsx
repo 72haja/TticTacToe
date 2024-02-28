@@ -114,7 +114,7 @@ export default component$(() => {
           player2={player2.value}
           playerIcon={playerIcon.value}
           activePlayer={activePlayer.value}
-          setActivePlayer={setActivePlayer}
+          setActivePlayer$={setActivePlayer}
           room={room}
           roomFull={roomFull.value}
         />

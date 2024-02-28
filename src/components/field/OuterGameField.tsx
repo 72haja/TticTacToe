@@ -1,4 +1,5 @@
 import { $, component$, useContext, useSignal, useStore, useTask$ } from "@builder.io/qwik";
+import type { QRL } from "@builder.io/qwik";
 import { v4 as uuid } from "uuid";
 import { GameField as GameFieldModel, OuterGameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
 import { SetGameFieldData } from "../../models/SetGameFieldData.ts";
@@ -9,17 +10,16 @@ import { initOuterGameField } from "../../utils/initGameField.ts";
 import GameField from "./GameField.tsx";
 import VictoryDialog from "./VictoryDialog.tsx";
 import { ResetPlayerState } from "../../models/ResetPlayerState.ts";
-import { Socket } from "socket.io-client";
+import { socket } from "./Field.tsx";
 
 interface ItemProps {
   player: any;
   player2: any;
   playerIcon: any;
   activePlayer: string;
-  setActivePlayer: Function;
+  setActivePlayer$: QRL<Function>;
   room: string;
   roomFull: boolean;
-  socket: Socket;
 }
 
 export default component$<ItemProps>((props) => {
@@ -37,6 +37,8 @@ export default component$<ItemProps>((props) => {
     snackbarCTX.type = type;
     snackbarCTX.id = uuid();
   });
+
+  const gameDraw = useSignal(false);
 
   const checkWinner = $((outerGameFieldPosition: OuterGameFieldPosition) => {
     const winningPositions: Position[][] = [
@@ -79,7 +81,13 @@ export default component$<ItemProps>((props) => {
       return field1 === field2 && field2 === field3 && field1 !== null;
     })
 
-    if (gameWon) {
+    gameDraw.value = !gameWon && Object.values(outerGameField).every(
+      (field) => field.gameField 
+        && Object.values(field.gameField).every((value) => value !== "")
+    );
+    console.log('gameDraw.value', gameDraw.value);
+
+    if (gameWon || gameDraw.value) {
       gameFinished.value = true;
       allowedOuterGameField.value = null;
     }
@@ -98,7 +106,7 @@ export default component$<ItemProps>((props) => {
       activePlayer: props.activePlayer,
       allowedOuterGameField: allowedOuterGameField.value,
     };
-    props.socket.emit("reset-player-state", resetPlayerState);
+    socket.emit("reset-player-state", resetPlayerState);
 
     outerGameFields.forEach(([outerGameFieldPosition, gameFieldObj]) => {
       const positions = Object.keys(gameFieldObj.gameField) as Position[];
@@ -119,7 +127,7 @@ export default component$<ItemProps>((props) => {
           gameField: gameFieldObj.gameField,
           outerGameFieldPosition,
         };
-        props.socket.emit("set-game-field", setGameFieldData);
+        socket.emit("set-game-field", setGameFieldData);
       }
     });
   });
@@ -142,7 +150,7 @@ export default component$<ItemProps>((props) => {
     allowedOuterGameField.value = getAllowedOuterGameField(pos);
   });
 
-  props.socket.on("set-position", (data: SetPositionData) => {
+  socket.on("set-position", (data: SetPositionData) => {
     outerGameField[data.outerGameFieldPosition].gameField[data.position] = props.player2;
     allowedOuterGameField.value = !!data.allowedOuterGameField
       && outerGameField[data.allowedOuterGameField].fieldWinner === null
@@ -152,7 +160,7 @@ export default component$<ItemProps>((props) => {
     checkWinner(data.outerGameFieldPosition);
   });
 
-  props.socket.on("set-game-field", (setGameFieldData: SetGameFieldData) => {
+  socket.on("set-game-field", (setGameFieldData: SetGameFieldData) => {
     const gameFieldObj = outerGameField[setGameFieldData.outerGameFieldPosition];
     const positions = Object.keys(setGameFieldData.gameField) as Position[];
     positions.forEach((position: Position) => {
@@ -161,7 +169,7 @@ export default component$<ItemProps>((props) => {
     checkWinner(setGameFieldData.outerGameFieldPosition);
   });
 
-  props.socket.on("reset-player-state", (data: ResetPlayerState) => {
+  socket.on("reset-player-state", (data: ResetPlayerState) => {
     allowedOuterGameField.value = data.allowedOuterGameField;
   })
 
@@ -174,14 +182,15 @@ export default component$<ItemProps>((props) => {
       gameFieldObj.fieldWinner = null;
     });
     gameFinished.value = false;
+    gameDraw.value = false;
   })
 
   const handleOnNewGame = $((data: string) => {
-    props.setActivePlayer(data);
+    props.setActivePlayer$(data);
     resetGameField()
   });
 
-  props.socket.on("new-game", () => {
+  socket.on("new-game", () => {
     resetGameField();
   });
 
@@ -194,8 +203,8 @@ export default component$<ItemProps>((props) => {
           player2={props.player2}
           activePlayer={props.activePlayer}
           room={props.room}
-          onNewGame={handleOnNewGame}
-          socket={props.socket}
+          gameDraw={gameDraw.value}
+          onNewGame$={handleOnNewGame}
         />
         : ""
       }
@@ -218,13 +227,12 @@ export default component$<ItemProps>((props) => {
                       outerGameFieldPosition={outerGameFieldPosition}
                       room={props.room}
                       gameField={gameFieldObj.gameField}
-                      setPosition={setPosition}
+                      setPosition$={setPosition}
                       gameReady={gameReady.value}
-                      checkWinner={checkWinner}
-                      setActivePlayer={props.setActivePlayer}
+                      checkWinner$={checkWinner}
+                      setActivePlayer$={props.setActivePlayer$}
                       fieldWinner={outerGameField[outerGameFieldPosition].fieldWinner}
                       disabled={!!allowedOuterGameField.value && allowedOuterGameField.value !== outerGameFieldPosition}
-                      socket={props.socket}
                     />
                   );
                 })
