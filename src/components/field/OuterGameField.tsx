@@ -1,45 +1,49 @@
-import { $, component$, useContext, useSignal, useStore, useTask$ } from "@builder.io/qwik";
 import { v4 as uuid } from "uuid";
-import { GameField as GameFieldModel, OuterGameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
-import { ResetPlayerState } from "../../models/ResetPlayerState.ts";
-import { SetGameFieldData } from "../../models/SetGameFieldData.ts";
-import { SetPositionData } from "../../models/SetPositionData.ts";
-import { SnackbarCTX, SnackbarState, SnackbarType } from "../../store/SnackbarStore.ts";
-import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
-import { initOuterGameField } from "../../utils/initGameField.ts";
-import { socket } from "./Field.tsx";
-import GameField from "./GameField.tsx";
-import VictoryDialog from "./VictoryDialog.tsx";
+import { GameField as GameFieldModel, OuterGameField as OuterGameFieldModel, OuterGameFieldPosition, Position } from "../../models/GameField";
+import { ResetPlayerState } from "../../models/ResetPlayerState";
+import { SetGameFieldData } from "../../models/SetGameFieldData";
+import { SetPositionData } from "../../models/SetPositionData";
+import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField";
+import { initOuterGameField } from "../../utils/initGameField";
+import { socket } from "./Field";
+import { GameField } from "./GameField";
+import {VictoryDialog} from "./VictoryDialog";
+import { useEffect, useState } from "react";
 
 interface ItemProps {
   player: any;
   player2: any;
   playerIcon: any;
   activePlayer: string;
-  setActivePlayer$: Function;
+  setActivePlayer: Function;
   room: string;
   roomFull: boolean;
+  setSnackbar: Function;
 }
 
-export default component$<ItemProps>((props) => {
-  const gameReady = useSignal(false);
-  const gameFinished = useSignal(false);
+export function OuterGameField(props: ItemProps) {
+  // const gameReady = useSignal(false);
+  const [gameReady, setGameReady]: [boolean, (gameReady: boolean) => void] = useState(false);
+  const [gameFinished, setGameFinished]: [boolean, (gameFinished: boolean) => void] = useState(false);
 
-  const outerGameField: OuterGameField = useStore(initOuterGameField());
-  const allowedOuterGameField = useSignal<OuterGameFieldPosition | null>(null);
+  // const outerGameField: OuterGameFieldModel = useStore(initOuterGameField());
+  const [outerGameField, setOuterGameField]: [OuterGameFieldModel, (outerGameField: OuterGameFieldModel) => void] = useState(initOuterGameField());
+  // const allowedOuterGameField = useSignal<OuterGameFieldPosition | null>(null);
+  const [allowedOuterGameField, setAllowedOuterGameField]: [OuterGameFieldPosition | null, (allowedOuterGameField: OuterGameFieldPosition | null) => void] = useState(null as OuterGameFieldPosition | null);
 
-  const snackbarCTX = useContext(SnackbarCTX) as SnackbarState;
+  // const snackbarCTX = useContext(SnackbarCTX) as SnackbarState;
 
-  const showSnackbar = $((text: string, type: SnackbarType) => {
-    snackbarCTX.show = true;
-    snackbarCTX.text = text;
-    snackbarCTX.type = type;
-    snackbarCTX.id = uuid();
-  });
+  // const setSnackbar = ((text: string, type: SnackbarType) => {
+  //   snackbarCTX.show = true;
+  //   snackbarCTX.text = text;
+  //   snackbarCTX.type = type;
+  //   snackbarCTX.id = uuid();
+  // });
 
-  const gameDraw = useSignal(false);
+  // const gameDraw = useSignal(false);
+  const [gameDraw, setGameDraw]: [boolean, (gameDraw: boolean) => void] = useState(false);
 
-  const checkWinner = $((outerGameFieldPosition: OuterGameFieldPosition) => {
+  function checkWinner(outerGameFieldPosition: OuterGameFieldPosition) {
     const winningPositions: Position[][] = [
       ["0.0", "0.1", "0.2"],
       ["1.0", "1.1", "1.2"],
@@ -80,21 +84,37 @@ export default component$<ItemProps>((props) => {
       return field1 === field2 && field2 === field3 && field1 !== null;
     })
 
-    gameDraw.value = !gameWon && Object.values(outerGameField).every(
+    const tmpGameDraw = !gameWon && Object.values(outerGameField).every(
       (field) => field.gameField
         && Object.values(field.gameField).every((value) => value !== "")
     );
-    console.log('gameDraw.value', gameDraw.value);
+    setGameDraw(tmpGameDraw);
+    console.log('gameDraw.value', gameDraw);
 
-    if (gameWon || gameDraw.value) {
-      gameFinished.value = true;
-      allowedOuterGameField.value = null;
+    if (gameWon || gameDraw) {
+      setGameFinished(true);
+      setAllowedOuterGameField(null);
     }
 
     return gameWon;
-  });
+  };
 
-  const checkAndReplaceOldPlayerInField = $(async (newPlayer: string) => {
+  function setPosInOuterGameFieldPos(outerGameFieldPosition: OuterGameFieldPosition, pos: Position, player: string) {
+    // outerGameField[outerGameFieldPosition].gameField[pos] = player;
+    const tmpOuterGameField = { 
+      ...outerGameField,
+      [outerGameFieldPosition]: {
+        ...outerGameField[outerGameFieldPosition],
+        gameField: {
+          ...outerGameField[outerGameFieldPosition].gameField,
+          [pos]: player,
+        }
+      }
+    };
+    setOuterGameField(tmpOuterGameField);
+  }
+
+  async function checkAndReplaceOldPlayerInField(newPlayer: string) {
     const outerGameFields = Object.entries(outerGameField) as [
       OuterGameFieldPosition, { gameField: GameFieldModel }
     ][];
@@ -103,7 +123,7 @@ export default component$<ItemProps>((props) => {
       room: props.room,
       iconFromOtherPlayer: props.playerIcon,
       activePlayer: props.activePlayer,
-      allowedOuterGameField: allowedOuterGameField.value,
+      allowedOuterGameField: allowedOuterGameField,
     };
     socket.emit("reset-player-state", resetPlayerState);
 
@@ -117,7 +137,7 @@ export default component$<ItemProps>((props) => {
         },
       );
       fieldsOfOldPlayer.forEach((position: Position) => {
-        gameFieldObj.gameField[position] = newPlayer;
+        setPosInOuterGameFieldPos(outerGameFieldPosition, position, newPlayer);
       });
       const anyFieldIsSet = Object.values(gameFieldObj.gameField).some((value: string) => value !== "");
       if (anyFieldIsSet) {
@@ -129,32 +149,49 @@ export default component$<ItemProps>((props) => {
         socket.emit("set-game-field", setGameFieldData);
       }
     });
-  });
+  };
 
-  useTask$(({ track }) => {
-    const newPlayer2 = track(() => props.player2);
-    if (newPlayer2 === "") {
-      if (gameReady.value) {
-        showSnackbar("Spieler 2 hat das Spiel verlassen", "error");
+  // useTask(({ track }) => {
+  //   const newPlayer2 = track(() => props.player2);
+  //   if (newPlayer2 === "") {
+  //     if (gameReady.value) {
+  //       setSnackbar("Spieler 2 hat das Spiel verlassen", "error");
+  //     }
+  //     return
+  //   };
+  //   checkAndReplaceOldPlayerInField(newPlayer2)
+  //   gameReady.value = true;
+  //   setSnackbar("Spieler 2 ist beigetreten", "success");
+  // });
+
+  useEffect(() => {
+    console.log('props.player2', props.player2);
+    if (props.player2 === "") {
+      if (gameReady) {
+        props.setSnackbar("Spieler 2 hat das Spiel verlassen", "error");
       }
       return
-    };
-    checkAndReplaceOldPlayerInField(newPlayer2)
-    gameReady.value = true;
-    showSnackbar("Spieler 2 ist beigetreten", "success");
-  });
+    }
+    checkAndReplaceOldPlayerInField(props.player2)
+    setGameReady(true);
+    props.setSnackbar("Spieler 2 ist beigetreten", "success");
+  }, [props.player2]);
 
-  const setPosition = $((outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) => {
-    outerGameField[outerGameFieldPos].gameField[pos] = player;
-    allowedOuterGameField.value = getAllowedOuterGameField(pos);
-  });
+  function setPosition(outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) {
+    // outerGameField[outerGameFieldPos].gameField[pos] = player;
+    setPosInOuterGameFieldPos(outerGameFieldPos, pos, player);
+    // allowedOuterGameField.value = getAllowedOuterGameField(pos);
+    const allowedOuterGameField = getAllowedOuterGameField(pos);
+    setAllowedOuterGameField(allowedOuterGameField);
+  };
 
   socket.on("set-position", (data: SetPositionData) => {
     outerGameField[data.outerGameFieldPosition].gameField[data.position] = props.player2;
-    allowedOuterGameField.value = !!data.allowedOuterGameField
+    const allowedGameField = !!data.allowedOuterGameField
       && outerGameField[data.allowedOuterGameField].fieldWinner === null
       ? data.allowedOuterGameField
       : null;
+    setAllowedOuterGameField(allowedGameField);
 
     checkWinner(data.outerGameFieldPosition);
   });
@@ -163,55 +200,48 @@ export default component$<ItemProps>((props) => {
     const gameFieldObj = outerGameField[setGameFieldData.outerGameFieldPosition];
     const positions = Object.keys(setGameFieldData.gameField) as Position[];
     positions.forEach((position: Position) => {
-      gameFieldObj.gameField[position] = setGameFieldData.gameField[position];
+      setPosInOuterGameFieldPos(setGameFieldData.outerGameFieldPosition, position, setGameFieldData.gameField[position]);
     });
     checkWinner(setGameFieldData.outerGameFieldPosition);
   });
 
   socket.on("reset-player-state", (data: ResetPlayerState) => {
-    allowedOuterGameField.value = data.allowedOuterGameField;
+    setAllowedOuterGameField(data.allowedOuterGameField);
   })
 
-  const resetGameField = $(() => {
-    Object.entries(outerGameField).forEach(([_, gameFieldObj]) => {
-      const positions = Object.keys(gameFieldObj.gameField) as Position[];
-      positions.forEach((position: Position) => {
-        gameFieldObj.gameField[position] = "";
-      });
-      gameFieldObj.fieldWinner = null;
-    });
-    gameFinished.value = false;
-    gameDraw.value = false;
-  })
+  function resetGameField() {
+    setOuterGameField(initOuterGameField());
+    setGameFinished(false);
+    setGameDraw(false);
+  };
 
-  const handleOnNewGame = $((data: string) => {
-    props.setActivePlayer$(data);
+  function handleOnNewGame(data: string) {
+    props.setActivePlayer(data);
     resetGameField()
-  });
+  };
 
   socket.on("new-game", () => {
     resetGameField();
   });
 
   return (
-    <div class="w-full h-full">
-      {gameFinished.value
-        ? <VictoryDialog
+    <div className="w-full h-full">
+      {gameFinished
+        && <VictoryDialog
           player={props.player}
           playerIcon={props.playerIcon}
           player2={props.player2}
           activePlayer={props.activePlayer}
           room={props.room}
-          gameDraw={gameDraw.value}
-          onNewGame$={handleOnNewGame}
+          gameDraw={gameDraw}
+          onNewGame={handleOnNewGame}
         />
-        : ""
       }
       {
         props.roomFull
           ? <span> Room is full. Please try another room</span>
-          : gameReady.value
-            ? <div class="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%]">
+          : gameReady
+            ? <div className="grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%]">
               {(Object.entries(outerGameField) as [
                 OuterGameFieldPosition, { gameField: GameFieldModel }
               ][])
@@ -226,12 +256,12 @@ export default component$<ItemProps>((props) => {
                       outerGameFieldPosition={outerGameFieldPosition}
                       room={props.room}
                       gameField={gameFieldObj.gameField}
-                      gameReady={gameReady.value}
-                      setPosition$={setPosition}
-                      checkWinner$={checkWinner}
-                      setActivePlayer$={props.setActivePlayer$}
+                      gameReady={gameReady}
+                      setPosition={setPosition}
+                      checkWinner={checkWinner}
+                      setActivePlayer={props.setActivePlayer}
                       fieldWinner={outerGameField[outerGameFieldPosition].fieldWinner}
-                      disabled={!!allowedOuterGameField.value && allowedOuterGameField.value !== outerGameFieldPosition}
+                      disabled={!!allowedOuterGameField && allowedOuterGameField !== outerGameFieldPosition}
                     />
                   );
                 })
@@ -241,4 +271,4 @@ export default component$<ItemProps>((props) => {
       }
     </div>
   );
-});
+};

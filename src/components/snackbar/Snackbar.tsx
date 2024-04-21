@@ -1,75 +1,79 @@
-import { component$, useComputed$, useContext, useSignal, useTask$ } from "@builder.io/qwik";
-import { FaCircleCheckRegular } from "@qwikest/icons/font-awesome";
-import { SnackbarCTX, SnackbarState } from "../../store/SnackbarStore";
+import { SnackbarState, initialState, snackbarReducer } from '@/reducers/snackbarReducer';
+import { useEffect, useState } from 'react';
 
-export default component$(() => {
 
-  const snackbarCTX = useContext(SnackbarCTX) as SnackbarState;
+export function Snackbar(props: SnackbarState & { setSnackbarState: (state: SnackbarState) => void }) {
 
-  const timeout = useSignal(0);
+  const [timeout, setLocalTimeout]: [
+    ReturnType<typeof setTimeout>, 
+    (timeout: ReturnType<typeof setTimeout>) => void
+  ] = useState(null as unknown as ReturnType<typeof setTimeout>);
 
-  useTask$(({ track }) => {
-    const show = track(() => snackbarCTX.show);
-    const id = track(() => snackbarCTX.id);
-
-    if (show || id) {
-      if (timeout.value > 0) {
-        clearTimeout(timeout.value);
+  
+  useEffect(() => {
+    if (props.show || props.id) {
+      if (timeout !== null) {
+        clearTimeout(timeout);
       }
-
-      timeout.value = setTimeout(() => {
-        snackbarCTX.show = false;
-      }, snackbarCTX.timeout) as unknown as number;
+  
+      const newTimeout: ReturnType<typeof setTimeout> = setTimeout(() => {
+        props.setSnackbarState({
+          show: false,
+          text: "",
+          color: "success",
+          timeout: 3000,
+          id: "",
+        });
+      }, props.timeout);
+      setLocalTimeout(newTimeout);
     }
-  });
+  }, [props])
 
-  const snackbarWrapperColor = useComputed$(() => {
-    switch (snackbarCTX.type) {
+  const [snackbarWrapperColor, setSnackbarWrapperColor]: [
+    string, 
+    (color: string) => void
+  ] = useState("bg-teal-100 border-teal-500 text-teal-900");
+
+  const [snackbarTextColor, setSnackbarTextColor]: [
+    string,
+    (color: string) => void
+  ] = useState("text-teal-500");
+
+
+  useEffect(() => {
+    switch (props.color) {
       case "success":
-        return "bg-teal-100 border-teal-500 text-teal-900";
+        setSnackbarWrapperColor("bg-teal-100 border-teal-500 text-teal-900");
+        setSnackbarTextColor("text-teal-500");
+        break;
       case "error":
-        return "bg-red-100 border-red-500 text-red-900";
+        setSnackbarWrapperColor("bg-red-100 border-red-500 text-red-900");
+        setSnackbarTextColor("text-red-500");
+        break;
       default:
-        return "bg-teal-100 border-teal-500 text-teal-900";
+        setSnackbarWrapperColor("bg-teal-100 border-teal-500 text-teal-900");
+        setSnackbarTextColor("text-teal-500");
+        break;
     }
-  });
-
-  const snackbarTextColor = useComputed$(() => {
-    switch (snackbarCTX.type) {
-      case "success":
-        return "text-teal-500";
-      case "error":
-        return "text-red-500";
-      default:
-        return "text-teal-500";
-    }
-  });
+  }, [props.color]);
 
   return (
-    <div
-      class="absolute bottom-0 left-0 w-full p-4 flex justify-center"
-    >
+    <div className="absolute bottom-0 left-0 w-full p-4 flex justify-center">
       {
-        snackbarCTX.show
+        props.show
           ? <div
-            class={[
-              "border-t-4 rounded-b px-4 py-3 shadow-md w-[400px] max-w-[400px]",
-              snackbarWrapperColor.value
-            ]}
+            className={
+              "border-t-4 rounded-b px-4 py-3 shadow-md w-[400px] max-w-[400px]"
+              + snackbarWrapperColor
+            }
             role="alert"
           >
-            <div class="flex items-center">
-              <div class="py-1 tw-h-full flex flex-col justify-center">
-                <FaCircleCheckRegular class={[
-                  "fill-current h-6 w-6 mr-4",
-                  snackbarTextColor.value,
-                ]} />
-              </div>
-              <p class="font-bold">{snackbarCTX.text}</p>
+            <div className="flex items-center">
+              <p className="font-bold">{props.text}</p>
             </div>
           </div>
           : <div></div>
       }
     </div>
   );
-})
+}

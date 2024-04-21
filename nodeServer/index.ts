@@ -7,9 +7,9 @@ import { PlayerData } from '../src/models/PlayerData';
 
 const io = new Server(8080, {
   cors: {
-    // origin: 'http://localhost:8081',
+    origin: 'http://localhost:3000',
     // origin: 'http://192.168.10.236:8081',
-    origin: 'https://ttictactoe.onrender.com',
+    // origin: 'https://ttictactoe.onrender.com',
   },
 });
 
@@ -41,6 +41,8 @@ io.on('connection', (socket) => {
     if (gameRooms[data.room] && gameRooms[data.room].length >= 2) {
       socket.emit('room-full');
       socket.disconnect();
+
+      console.log("gameRooms", gameRooms);
       return;
     }
     if(!gameRooms[data.room]) {
@@ -58,6 +60,7 @@ io.on('connection', (socket) => {
     }
 
     const player2 = gameRooms[data.room].find(player => player !== socket.id);
+    console.log("gameRooms", gameRooms);
     if (!player2) return;
 
     socket.emit('set-player2', { player: player2 });
