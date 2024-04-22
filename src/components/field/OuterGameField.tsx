@@ -22,25 +22,12 @@ interface ItemProps {
 }
 
 export function OuterGameField(props: ItemProps) {
-  // const gameReady = useSignal(false);
   const [gameReady, setGameReady]: [boolean, (gameReady: boolean) => void] = useState(false);
   const [gameFinished, setGameFinished]: [boolean, (gameFinished: boolean) => void] = useState(false);
 
-  // const outerGameField: OuterGameFieldModel = useStore(initOuterGameField());
   const [outerGameField, setOuterGameField]: [OuterGameFieldModel, (outerGameField: OuterGameFieldModel) => void] = useState(initOuterGameField());
-  // const allowedOuterGameField = useSignal<OuterGameFieldPosition | null>(null);
   const [allowedOuterGameField, setAllowedOuterGameField]: [OuterGameFieldPosition | null, (allowedOuterGameField: OuterGameFieldPosition | null) => void] = useState(null as OuterGameFieldPosition | null);
 
-  // const snackbarCTX = useContext(SnackbarCTX) as SnackbarState;
-
-  // const setSnackbar = ((text: string, type: SnackbarType) => {
-  //   snackbarCTX.show = true;
-  //   snackbarCTX.text = text;
-  //   snackbarCTX.type = type;
-  //   snackbarCTX.id = uuid();
-  // });
-
-  // const gameDraw = useSignal(false);
   const [gameDraw, setGameDraw]: [boolean, (gameDraw: boolean) => void] = useState(false);
 
   function checkWinner(outerGameFieldPosition: OuterGameFieldPosition) {
@@ -89,7 +76,6 @@ export function OuterGameField(props: ItemProps) {
         && Object.values(field.gameField).every((value) => value !== "")
     );
     setGameDraw(tmpGameDraw);
-    console.log('gameDraw.value', gameDraw);
 
     if (gameWon || gameDraw) {
       setGameFinished(true);
@@ -100,7 +86,6 @@ export function OuterGameField(props: ItemProps) {
   };
 
   function setPosInOuterGameFieldPos(outerGameFieldPosition: OuterGameFieldPosition, pos: Position, player: string) {
-    // outerGameField[outerGameFieldPosition].gameField[pos] = player;
     const tmpOuterGameField = { 
       ...outerGameField,
       [outerGameFieldPosition]: {
@@ -151,21 +136,7 @@ export function OuterGameField(props: ItemProps) {
     });
   };
 
-  // useTask(({ track }) => {
-  //   const newPlayer2 = track(() => props.player2);
-  //   if (newPlayer2 === "") {
-  //     if (gameReady.value) {
-  //       setSnackbar("Spieler 2 hat das Spiel verlassen", "error");
-  //     }
-  //     return
-  //   };
-  //   checkAndReplaceOldPlayerInField(newPlayer2)
-  //   gameReady.value = true;
-  //   setSnackbar("Spieler 2 ist beigetreten", "success");
-  // });
-
   useEffect(() => {
-    console.log('props.player2', props.player2);
     if (props.player2 === "") {
       if (gameReady) {
         props.setSnackbar("Spieler 2 hat das Spiel verlassen", "error");
@@ -178,9 +149,7 @@ export function OuterGameField(props: ItemProps) {
   }, [props.player2]);
 
   function setPosition(outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) {
-    // outerGameField[outerGameFieldPos].gameField[pos] = player;
     setPosInOuterGameFieldPos(outerGameFieldPos, pos, player);
-    // allowedOuterGameField.value = getAllowedOuterGameField(pos);
     const allowedOuterGameField = getAllowedOuterGameField(pos);
     setAllowedOuterGameField(allowedOuterGameField);
   };

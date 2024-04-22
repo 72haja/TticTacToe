@@ -29,7 +29,12 @@ io.on('connection', (socket) => {
 
   socket.on("self-join", () => {
     setTimeout(() => {
-      socket.emit("self-join", socket.id);
+      const playerData: PlayerData = {
+        player: socket.id,
+        room: connectionRoom,
+        gameRoom: gameRooms[connectionRoom]
+      };
+      socket.emit("self-join", playerData);
     }, 200);
   })
 
@@ -38,7 +43,11 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', (data: PlayerData) => {
-    if (gameRooms[data.room] && gameRooms[data.room].length >= 2) {
+    if (
+      gameRooms[data.room] 
+      && gameRooms[data.room].length >= 2
+      && !gameRooms[data.room].includes(data.player)
+    ) {
       socket.emit('room-full');
       socket.disconnect();
 
@@ -51,22 +60,12 @@ io.on('connection', (socket) => {
     if (!gameRooms[data.room].includes(data.player)) {
       gameRooms[data.room].push(data.player);
     }
-    socket.to(connectionRoom).emit('join', { player: data.player });
-
-    if (gameRooms[data.room].length === 1) {
-      socket.emit('your-are-player1');
-    } else {
-      socket.emit('your-are-player2');
-    }
-
-    const player2 = gameRooms[data.room].find(player => player !== socket.id);
-    console.log("gameRooms", gameRooms);
-    if (!player2) return;
-
-    socket.emit('set-player2', { player: player2 });
+    socket.to(connectionRoom).emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
+    socket.emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
   })
 
   socket.on('disconnect', () => {
+    console.log('disconnect', socket.id);
     if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
     gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
