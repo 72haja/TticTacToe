@@ -43,13 +43,21 @@ export function Field(props: FieldProps) {
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
 
-    socket.emit("self-join");
+    if (props.room) {
+      socket.emit("self-join", props.room);
+    }
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
     };
   }, []);
+
+  useEffect(() => {
+    if (props.room) {
+      socket.emit("self-join", props.room);
+    }
+  }, [props.room]);
 
   const [player, setPlayer]: [string, (player: string) => void] = useState("");
   const [playerIcon, setPlayerIcon]: [IconName, (icon: IconName) => void] = useState("CilCircle" as IconName);

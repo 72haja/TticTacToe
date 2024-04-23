@@ -27,6 +27,9 @@ io.on('connection', (socket) => {
   // Send data to everyone who is connected
   
   socket.on("self-join", (room: string) => {
+    console.log('🚀 self-join ~ socket.on ~ room:', room);
+    if(!room) return;
+
     socket.join(room);
     setTimeout(() => {
       const playerData: PlayerData = {
@@ -43,6 +46,9 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', (data: PlayerData) => {
+    console.log('🚀 join ~ socket.on ~ data:', data);
+    if(!data.room) return;
+
     if (
       gameRooms[data.room] 
       && gameRooms[data.room].length >= 2
@@ -92,6 +98,13 @@ io.on('connection', (socket) => {
 
   socket.on("new-game", (room: string) => {
     socket.to(room).emit("new-game");
+  })
+
+  socket.onAnyOutgoing(() => {
+    console.log('gameRooms', gameRooms);
+  })
+  socket.onAny(() => {
+    console.log('gameRooms', gameRooms);
   })
 })
 

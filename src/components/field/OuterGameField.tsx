@@ -137,6 +137,8 @@ export function OuterGameField(props: ItemProps) {
   };
 
   useEffect(() => {
+    if (!props.player2) return;
+
     if (props.player2 === "") {
       if (gameReady) {
         props.setSnackbar("Spieler 2 hat das Spiel verlassen", "error");
