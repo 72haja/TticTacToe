@@ -20,19 +20,19 @@ const gameRooms: {[roomName: string]: string[]} = {};
 io.on('connection', (socket) => {
   console.log('made socket connection', socket.id);
 
-  const connectionRoom = socket.request.headers.room as string ?? 'default';
-  socket.join(connectionRoom);
-
+  // const connectionRoom = socket.request.headers.room as string ?? 'default';
+  
   console.log("rooms", socket.rooms);
-
+  
   // Send data to everyone who is connected
-
-  socket.on("self-join", () => {
+  
+  socket.on("self-join", (room: string) => {
+    socket.join(room);
     setTimeout(() => {
       const playerData: PlayerData = {
         player: socket.id,
-        room: connectionRoom,
-        gameRoom: gameRooms[connectionRoom]
+        room: room,
+        gameRoom: gameRooms[room]
       };
       socket.emit("self-join", playerData);
     }, 200);
@@ -60,12 +60,14 @@ io.on('connection', (socket) => {
     if (!gameRooms[data.room].includes(data.player)) {
       gameRooms[data.room].push(data.player);
     }
-    socket.to(connectionRoom).emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
+    socket.to(data.room).emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
     socket.emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
   })
 
   socket.on('disconnect', () => {
-    console.log('disconnect', socket.id);
+    const connectionRoom = Object.entries(gameRooms)
+      .find(([room, players]) => players.indexOf(socket.id) !== -1)?.[0]
+      ?? '';
     if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
     gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
@@ -80,7 +82,7 @@ io.on('connection', (socket) => {
     socket.to(data.room).emit('set-position', data);
   })
 
-  socket.on("set-active-player", (data: SetActivePlayerData) => {
+  socket.on("set-active-player", (data: PlayerData) => {
     socket.to(data.room).emit("set-active-player", data.player);
   })
 
@@ -93,7 +95,3 @@ io.on('connection', (socket) => {
   })
 })
 
-interface SetActivePlayerData {
-  room: string;
-  player: string;
-}

@@ -5,32 +5,52 @@ import { OuterGameField } from "./OuterGameField";
 import { ResetPlayerState } from "../../models/ResetPlayerState";
 import { IconName } from "../../models/IconName";
 import { PlayerData } from "../../models/PlayerData";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-
-const room = "room1";
 
 // const URL = "https://ttictactoe-server.onrender.com";
 const URL = "http://localhost:8080";
 export const socket = io(URL, {
-  extraHeaders: {
-    "room": room,
-  },
+  // extraHeaders: {
+  //   "room": room,
+  // },
 });
 
 socket.onAny((event, ...args) => {
   console.log("onAny", event, args);
 });
 
-socket.connect();
+// socket.connect();
 
-socket.emit("self-join");
 
 type FieldProps = {
   setSnackbar: Function;
+  room: string;
 };
 
 export function Field(props: FieldProps) {
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  
+  useEffect(() => {
+    function onConnect() {
+      setIsConnected(true);
+    }
+    
+    function onDisconnect() {
+      setIsConnected(false);
+    }
+    
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+
+    socket.emit("self-join");
+
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+    };
+  }, []);
+
   const [player, setPlayer]: [string, (player: string) => void] = useState("");
   const [playerIcon, setPlayerIcon]: [IconName, (icon: IconName) => void] = useState("CilCircle" as IconName);
   const [player2, setPlayer2]: [string, (player: string) => void] = useState("");
@@ -40,7 +60,7 @@ export function Field(props: FieldProps) {
 
   socket.on("self-join", (data: PlayerData) => {
     setPlayer(data.player);
-    const joinData: PlayerData = { player: data.player, room };
+    const joinData: PlayerData = { player: data.player, room: props.room };
     socket.emit("join", joinData);
   });
 
@@ -88,7 +108,7 @@ export function Field(props: FieldProps) {
 
   function setActivePlayerFnk(player: string) {
     setActivePlayer(player);
-    socket.emit("set-active-player", { player, room });
+    socket.emit("set-active-player", { player, room: props.room });
   };
 
   socket.on("set-active-player", (playerProp: string) => {
@@ -129,7 +149,7 @@ export function Field(props: FieldProps) {
           playerIcon={playerIcon}
           activePlayer={activePlayer}
           setActivePlayer={setActivePlayerFnk}
-          room={room}
+          room={props.room}
           roomFull={roomFull}
           setSnackbar={props.setSnackbar}
         />
