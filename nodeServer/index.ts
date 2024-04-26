@@ -46,7 +46,6 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', (data: PlayerData) => {
-    console.log('🚀 join ~ socket.on ~ data:', data);
     if(!data.room) return;
 
     if (
@@ -98,6 +97,7 @@ io.on('connection', (socket) => {
 
   socket.on("new-game", (room: string) => {
     socket.to(room).emit("new-game");
+    socket.emit("new-game");
   })
 
   socket.onAnyOutgoing(() => {

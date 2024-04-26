@@ -30,7 +30,7 @@ export function OuterGameField(props: ItemProps) {
 
   const [gameDraw, setGameDraw]: [boolean, (gameDraw: boolean) => void] = useState(false);
 
-  function checkWinner(outerGameFieldPosition: OuterGameFieldPosition) {
+  function checkFieldWinner(outerGameFieldPosition: OuterGameFieldPosition) {
     const winningPositions: Position[][] = [
       ["0.0", "0.1", "0.2"],
       ["1.0", "1.1", "1.2"],
@@ -44,15 +44,24 @@ export function OuterGameField(props: ItemProps) {
 
     const relevantField = outerGameField[outerGameFieldPosition].gameField
 
-    const fieldWon = winningPositions.find((winningPosition) =>
-      relevantField[winningPosition[0]] === relevantField[winningPosition[1]] &&
-      relevantField[winningPosition[1]] === relevantField[winningPosition[2]] &&
-      relevantField[winningPosition[0]] !== ""
-    );
-    if (fieldWon) {
-      outerGameField[outerGameFieldPosition].fieldWinner = relevantField[fieldWon[0]];
-    }
+    const fieldWon = winningPositions.find((winningPosition) => {
+      const [pos1, pos2, pos3] = winningPosition;
+      const field1 = relevantField[pos1];
+      const field2 = relevantField[pos2];
+      const field3 = relevantField[pos3];
+      return field1 === field2 && field2 === field3 && field1 !== "";
+    });
 
+    if (fieldWon) {
+      setPosInOuterGameFieldWinner(outerGameFieldPosition, relevantField[fieldWon[0]]);
+    }
+  };
+
+  useEffect(() => {
+    checkGameWinner();
+  }, [outerGameField]);
+
+  function checkGameWinner() {
     const winningPositionsOuterGameField: OuterGameFieldPosition[][] = [
       ["top-left", "top-center", "top-right"],
       ["center-left", "center-center", "center-right"],
@@ -83,7 +92,8 @@ export function OuterGameField(props: ItemProps) {
     }
 
     return gameWon;
-  };
+  }
+
 
   function setPosInOuterGameFieldPos(outerGameFieldPosition: OuterGameFieldPosition, pos: Position, player: string) {
     const tmpOuterGameField = { 
@@ -94,6 +104,17 @@ export function OuterGameField(props: ItemProps) {
           ...outerGameField[outerGameFieldPosition].gameField,
           [pos]: player,
         }
+      }
+    };
+    setOuterGameField(tmpOuterGameField);
+  }
+
+  function setPosInOuterGameFieldWinner(outerGameFieldPosition: OuterGameFieldPosition, player: string) {
+    const tmpOuterGameField = { 
+      ...outerGameField,
+      [outerGameFieldPosition]: {
+        ...outerGameField[outerGameFieldPosition],
+        fieldWinner: player,
       }
     };
     setOuterGameField(tmpOuterGameField);
@@ -131,6 +152,7 @@ export function OuterGameField(props: ItemProps) {
           gameField: gameFieldObj.gameField,
           outerGameFieldPosition,
         };
+        console.log('setGameFieldData', setGameFieldData);
         socket.emit("set-game-field", setGameFieldData);
       }
     });
@@ -157,23 +179,28 @@ export function OuterGameField(props: ItemProps) {
   };
 
   socket.on("set-position", (data: SetPositionData) => {
-    outerGameField[data.outerGameFieldPosition].gameField[data.position] = props.player2;
+    setPosInOuterGameFieldPos(data.outerGameFieldPosition, data.position, props.player2);
     const allowedGameField = !!data.allowedOuterGameField
       && outerGameField[data.allowedOuterGameField].fieldWinner === null
       ? data.allowedOuterGameField
       : null;
     setAllowedOuterGameField(allowedGameField);
 
-    checkWinner(data.outerGameFieldPosition);
+    checkFieldWinner(data.outerGameFieldPosition);
   });
 
   socket.on("set-game-field", (setGameFieldData: SetGameFieldData) => {
-    const gameFieldObj = outerGameField[setGameFieldData.outerGameFieldPosition];
     const positions = Object.keys(setGameFieldData.gameField) as Position[];
     positions.forEach((position: Position) => {
-      setPosInOuterGameFieldPos(setGameFieldData.outerGameFieldPosition, position, setGameFieldData.gameField[position]);
+      const fieldPlayer = setGameFieldData.gameField[position]
+      if (fieldPlayer === "") return;
+      if (fieldPlayer !== props.player2 && fieldPlayer !== props.player) {
+        setPosInOuterGameFieldPos(setGameFieldData.outerGameFieldPosition, position, props.player);
+      } else {
+        setPosInOuterGameFieldPos(setGameFieldData.outerGameFieldPosition, position, props.player2);
+      }
     });
-    checkWinner(setGameFieldData.outerGameFieldPosition);
+    checkFieldWinner(setGameFieldData.outerGameFieldPosition);
   });
 
   socket.on("reset-player-state", (data: ResetPlayerState) => {
@@ -229,7 +256,7 @@ export function OuterGameField(props: ItemProps) {
                       gameField={gameFieldObj.gameField}
                       gameReady={gameReady}
                       setPosition={setPosition}
-                      checkWinner={checkWinner}
+                      checkFieldWinner={checkFieldWinner}
                       setActivePlayer={props.setActivePlayer}
                       fieldWinner={outerGameField[outerGameFieldPosition].fieldWinner}
                       disabled={!!allowedOuterGameField && allowedOuterGameField !== outerGameFieldPosition}

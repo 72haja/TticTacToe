@@ -15,18 +15,17 @@ interface ItemProps {
 export function VictoryDialog(props: ItemProps) {
   function emitNewGame() {
     socket.emit("new-game", props.room);
-
-    const nextActivePlayer = props.activePlayer === props.player
-      ? props.player2
-      : props.player;
-
-    socket.emit("set-active-player", {
-      player: nextActivePlayer,
-      room: props.room,
-    });
-
-    props.onNewGame(nextActivePlayer);
   };
+
+  const winnerIcon = !props.gameDraw && props.activePlayer === props.player
+    ? <Player2Icon
+      playerIcon={props.playerIcon}
+      size="w-[60px]"
+    />
+    : !props.gameDraw && <Player1Icon
+      playerIcon={props.playerIcon}
+      size="w-[60px]"
+    />
 
   return (
     <div className="absolute top-0 left-0 z-10 w-full h-full flex items-center justify-center">
@@ -39,16 +38,7 @@ export function VictoryDialog(props: ItemProps) {
           && <span>Gewonnen hat Spieler: </span>
         }
 
-        {!props.gameDraw && props.activePlayer === props.player
-          ? <Player1Icon
-            playerIcon={props.playerIcon}
-            size="w-[60px]"
-          />
-          : !props.gameDraw && <Player2Icon
-            playerIcon={props.playerIcon}
-            size="w-[60px]"
-          />
-        }
+        {winnerIcon}
         <button
           onClick={() => emitNewGame()}
           className="bg-white text-green-800 rounded-lg p-2 md:col-span-1 col-span-2"

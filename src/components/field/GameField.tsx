@@ -19,15 +19,15 @@ interface ItemProps {
   fieldWinner: string | null;
   disabled: boolean;
   setActivePlayer: Function;
-  setPosition: Function;
-  checkWinner: Function;
+  setPosition: (outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) => void;
+  checkFieldWinner: (outerGameFieldPosition: OuterGameFieldPosition) => void;
 }
 
 export function GameField(props: ItemProps) {
   // const gameFinished = useSignal(false);
   const [gameFinished, setGameFinished]: [boolean, (gameFinished: boolean) => void] = useState(false);
 
-  async function sendPosition(pos: Position) {
+  function sendPosition(pos: Position) {
     const setPositionData: SetPositionData = {
       outerGameFieldPosition: props.outerGameFieldPosition,
       room: props.room,
@@ -36,11 +36,12 @@ export function GameField(props: ItemProps) {
     };
     props.setPosition(props.outerGameFieldPosition, pos, props.player);
     socket.emit("set-position", setPositionData);
-    if (await props.checkWinner(props.outerGameFieldPosition)) {
-      return;
-    }
-    props.setActivePlayer(props.player2);
   };
+
+  useEffect(() => {
+    props.checkFieldWinner(props.outerGameFieldPosition);
+    props.setActivePlayer(props.player2);
+  }, [props.gameField]);
 
   const defaultClass = "grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] md:border-2 border border-gray-300";
   const [computedClass, setComputedClass]: [string, (computedClass: string) => void] = useState(

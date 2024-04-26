@@ -105,7 +105,6 @@ export function Field(props: FieldProps) {
   }
 
   socket.on("reset-player-state", (data: ResetPlayerState) => {
-    // playerIcon.value = data.iconFromOtherPlayer === "CilXCircle"
     const newPlayerIcon = data.iconFromOtherPlayer === "CilXCircle"
       ? "CilCircle"
       : "CilXCircle";
