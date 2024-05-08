@@ -20,7 +20,6 @@ interface ItemProps {
   disabled: boolean;
   setActivePlayer: Function;
   setPosition: (outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) => void;
-  checkFieldWinner: (outerGameFieldPosition: OuterGameFieldPosition) => void;
 }
 
 export function GameField(props: ItemProps) {
@@ -28,20 +27,8 @@ export function GameField(props: ItemProps) {
   const [gameFinished, setGameFinished]: [boolean, (gameFinished: boolean) => void] = useState(false);
 
   function sendPosition(pos: Position) {
-    const setPositionData: SetPositionData = {
-      outerGameFieldPosition: props.outerGameFieldPosition,
-      room: props.room,
-      position: pos,
-      allowedOuterGameField: getAllowedOuterGameField(pos),
-    };
     props.setPosition(props.outerGameFieldPosition, pos, props.player);
-    socket.emit("set-position", setPositionData);
   };
-
-  useEffect(() => {
-    props.checkFieldWinner(props.outerGameFieldPosition);
-    props.setActivePlayer(props.player2);
-  }, [props.gameField]);
 
   const defaultClass = "grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] md:border-2 border border-gray-300";
   const [computedClass, setComputedClass]: [string, (computedClass: string) => void] = useState(

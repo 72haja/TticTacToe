@@ -16,9 +16,9 @@ export const socket = io(URL, {
   // },
 });
 
-socket.onAny((event, ...args) => {
-  console.log("onAny", event, args);
-});
+// socket.onAny((event, ...args) => {
+//   console.log("onAny", event, args);
+// });
 
 // socket.connect();
 
@@ -114,6 +114,7 @@ export function Field(props: FieldProps) {
   })
 
   function setActivePlayerFnk(player: string) {
+    console.trace('player', player);
     setActivePlayer(player);
     socket.emit("set-active-player", { player, room: props.room });
   };
