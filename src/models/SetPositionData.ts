@@ -4,5 +4,5 @@ export type SetPositionData = {
   outerGameFieldPosition: OuterGameFieldPosition;
   room: string;
   position: Position;
-  allowedOuterGameField: OuterGameFieldPosition | null;
+  player: string;
 }

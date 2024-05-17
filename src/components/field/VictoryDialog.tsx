@@ -9,7 +9,6 @@ interface ItemProps {
   player2: string;
   room: string;
   gameDraw: boolean;
-  onNewGame: Function;
 }
 
 export function VictoryDialog(props: ItemProps) {
@@ -18,11 +17,11 @@ export function VictoryDialog(props: ItemProps) {
   };
 
   const winnerIcon = !props.gameDraw && props.activePlayer === props.player
-    ? <Player2Icon
+    ? <Player1Icon
       playerIcon={props.playerIcon}
       size="w-[60px]"
     />
-    : !props.gameDraw && <Player1Icon
+    : !props.gameDraw && <Player2Icon
       playerIcon={props.playerIcon}
       size="w-[60px]"
     />

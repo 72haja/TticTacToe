@@ -18,7 +18,6 @@ interface ItemProps {
   gameReady: boolean;
   fieldWinner: string | null;
   disabled: boolean;
-  setActivePlayer: Function;
   setPosition: (outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) => void;
 }
 

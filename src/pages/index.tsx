@@ -15,7 +15,8 @@ export default function Home() {
   }
 
   function enterGame(gameId: string) {
-    router.push(`/game/${gameId}`);
+    const filteredGameId = gameId.replace(/(.*\/game\/)/, "");
+    router.push(`/game/${filteredGameId}`);
   }
 
   const [snackbarState, setSnackbarState] = useState<SnackbarState>({

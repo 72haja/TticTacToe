@@ -3,7 +3,10 @@ import { Server } from 'socket.io';
 import { SetPositionData } from '../src/models/SetPositionData';
 import { SetGameFieldData } from '../src/models/SetGameFieldData';
 import { ResetPlayerState } from '../src/models/ResetPlayerState';
+import { Game, OuterGameField, OuterGameFieldPosition, Position } from '../src/models/GameField';
 import { PlayerData } from '../src/models/PlayerData';
+import { initOuterGameField } from '@/utils/initGameField';
+import { getAllowedOuterGameField } from '@/utils/getAllowedOuterGameField';
 
 const io = new Server(8080, {
   cors: {
@@ -16,6 +19,7 @@ const io = new Server(8080, {
 console.log("Server started");
 
 const gameRooms: {[roomName: string]: string[]} = {};
+const outerGameFields: {[roomName: keyof typeof gameRooms]: Game } = {};
 
 io.on('connection', (socket) => {
   console.log('made socket connection', socket.id);
@@ -27,7 +31,6 @@ io.on('connection', (socket) => {
   // Send data to everyone who is connected
   
   socket.on("self-join", (room: string) => {
-    console.log('🚀 self-join ~ socket.on ~ room:', room);
     if(!room) return;
 
     socket.join(room);
@@ -55,18 +58,29 @@ io.on('connection', (socket) => {
     ) {
       socket.emit('room-full');
       socket.disconnect();
-
-      console.log("gameRooms", gameRooms);
       return;
     }
     if(!gameRooms[data.room]) {
       gameRooms[data.room] = [];
+      outerGameFields[data.room] = {
+        gameFields: initOuterGameField(),
+        activePlayer: data.player,
+        allowedOuterGameField: null,
+        winner: null,
+      }
     }
     if (!gameRooms[data.room].includes(data.player)) {
       gameRooms[data.room].push(data.player);
     }
-    socket.to(data.room).emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
-    socket.emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
+    const dataToSend: PlayerData = {
+      player: data.player,
+      room: data.room,
+      gameRoom: gameRooms[data.room],
+      game: outerGameFields[data.room]
+    }
+    console.log('dataToSend', dataToSend);
+    socket.to(data.room).emit('join', dataToSend);
+    socket.emit('join', dataToSend);
   })
 
   socket.on('disconnect', () => {
@@ -78,26 +92,30 @@ io.on('connection', (socket) => {
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
   });
 
-  socket.on('reset-player-state', (data: ResetPlayerState) => {
-    if(!gameRooms[data.room] || gameRooms[data.room].indexOf(socket.id) === -1) return;
-    socket.to(data.room).emit('reset-player-state', data);
-  });
-
   socket.on('set-position', (data: SetPositionData) => {
-    socket.to(data.room).emit('set-position', data);
+    const nextOuterGameField = handleSetPosition(data, outerGameFields[data.room]);
+    outerGameFields[data.room] = nextOuterGameField;
+
+    socket.to(data.room).emit('set-game', nextOuterGameField);
+    socket.emit('set-game', nextOuterGameField);
   })
 
   socket.on("set-active-player", (data: PlayerData) => {
     socket.to(data.room).emit("set-active-player", data.player);
   })
 
-  socket.on("set-game-field", (data: SetGameFieldData) => {
-    socket.to(data.room).emit("set-game-field", data);
-  })
-
   socket.on("new-game", (room: string) => {
-    socket.to(room).emit("new-game");
-    socket.emit("new-game");
+    const nextActivePlayer = outerGameFields[room].winner === gameRooms[room][0]
+      ? gameRooms[room][1]
+      : gameRooms[room][0];
+    outerGameFields[room] = {
+      gameFields: initOuterGameField(),
+      activePlayer: nextActivePlayer,
+      allowedOuterGameField: null,
+      winner: null,
+    }
+    socket.to(room).emit("set-game", outerGameFields[room]);
+    socket.emit("set-game", outerGameFields[room]);
   })
 
   socket.onAnyOutgoing(() => {
@@ -108,3 +126,105 @@ io.on('connection', (socket) => {
   })
 })
 
+function getFieldWinner(
+  outerGameFieldPosition: OuterGameFieldPosition,
+  tmpOuterGameField: OuterGameField
+) {
+  const winningPositions: Position[][] = [
+    ["0.0", "0.1", "0.2"],
+    ["1.0", "1.1", "1.2"],
+    ["2.0", "2.1", "2.2"],
+    ["0.0", "1.0", "2.0"],
+    ["0.1", "1.1", "2.1"],
+    ["0.2", "1.2", "2.2"],
+    ["0.0", "1.1", "2.2"],
+    ["0.2", "1.1", "2.0"],
+  ];
+
+  const relevantField = tmpOuterGameField[outerGameFieldPosition].gameField
+
+  const fieldWon = winningPositions.find((winningPosition) => {
+    const [pos1, pos2, pos3] = winningPosition;
+    const field1 = relevantField[pos1];
+    const field2 = relevantField[pos2];
+    const field3 = relevantField[pos3];
+    return field1 === field2 && field2 === field3 && field1 !== "";
+  });
+
+  if (fieldWon) {
+    // setPosInOuterGameFieldWinner(outerGameFieldPosition, relevantField[fieldWon[0]]);
+    return relevantField[fieldWon[0]];
+  }
+  return undefined;
+};
+
+
+function getGameWinner(
+  outerGameField: OuterGameField,
+): boolean  | string {
+  const winningPositionsOuterGameField: OuterGameFieldPosition[][] = [
+    ["top-left", "top-center", "top-right"],
+    ["center-left", "center-center", "center-right"],
+    ["bottom-left", "bottom-center", "bottom-right"],
+    ["top-left", "center-left", "bottom-left"],
+    ["top-center", "center-center", "bottom-center"],
+    ["top-right", "center-right", "bottom-right"],
+    ["top-left", "center-center", "bottom-right"],
+    ["top-right", "center-center", "bottom-left"],
+  ];
+  const gameWon = winningPositionsOuterGameField.some((winningPosition) => {
+    const [outerGameFieldPos1, outerGameFieldPos2, outerGameFieldPos3] = winningPosition;
+    const field1 = outerGameField[outerGameFieldPos1].fieldWinner;
+    const field2 = outerGameField[outerGameFieldPos2].fieldWinner;
+    const field3 = outerGameField[outerGameFieldPos3].fieldWinner;
+    return field1 === field2 && field2 === field3 && field1 !== null;
+  })
+
+  const gameDraw = !gameWon && Object.values(outerGameField).every(
+    (field) => field.gameField
+      && Object.values(field.gameField).every((value) => value !== "")
+  );
+
+  if (gameDraw) {
+    return "draw";
+  }
+
+  return gameWon;
+}
+
+function handleSetPosition(data: SetPositionData, game: Game) {
+  const localGameField: Game = JSON.parse(JSON.stringify(game));
+  localGameField.gameFields[data.outerGameFieldPosition].gameField[data.position] = data.player;
+
+  const fieldWinner = getFieldWinner(
+    data.outerGameFieldPosition,
+    localGameField.gameFields
+  );
+  if(fieldWinner) {
+    localGameField.gameFields[data.outerGameFieldPosition].fieldWinner = fieldWinner;
+  }
+
+  const gameWinner = getGameWinner(
+    localGameField.gameFields
+  );
+  if(gameWinner === true) {
+    localGameField.winner = localGameField.activePlayer;
+    return localGameField;
+  } else if (gameWinner === "draw") {
+    localGameField.winner = "draw";
+    return localGameField;
+  }
+  
+  const allowedOuterGameField = getAllowedOuterGameField(data.position);
+  if(localGameField.gameFields[allowedOuterGameField].fieldWinner) {
+    localGameField.allowedOuterGameField = null;
+  } else {
+    localGameField.allowedOuterGameField = allowedOuterGameField;
+  }
+
+  localGameField.activePlayer = data.player === gameRooms[data.room][0] 
+    ? gameRooms[data.room][1]
+    : gameRooms[data.room][0];
+
+  return localGameField;
+}
