@@ -1,13 +1,15 @@
-import { Slot, component$ } from "@builder.io/qwik";
-
 import "./responsiveFieldWrapper.css";
 
-export default component$(() => {
+type ResponsiveFieldWrapperProps = {
+  children: React.ReactNode;
+}
+
+export function ResponsiveFieldWrapper(props: ResponsiveFieldWrapperProps) {
   return (
-    <div id="square-wrapper" class="w-full h-full flex flex-col gap-5 items-center justify-center ">
+    <div id="square-wrapper" className="w-full h-full flex flex-col gap-5 items-center justify-center ">
       <div id="square">
-        <Slot />
+        {props.children}
       </div>
     </div>
   );
-});
+};

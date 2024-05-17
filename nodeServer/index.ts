@@ -7,9 +7,9 @@ import { PlayerData } from '../src/models/PlayerData';
 
 const io = new Server(8080, {
   cors: {
-    // origin: 'http://localhost:8081',
+    origin: 'http://localhost:3000',
     // origin: 'http://192.168.10.236:8081',
-    origin: 'https://ttictactoe.onrender.com',
+    // origin: 'https://ttictactoe.onrender.com',
   },
 });
 
@@ -20,14 +20,24 @@ const gameRooms: {[roomName: string]: string[]} = {};
 io.on('connection', (socket) => {
   console.log('made socket connection', socket.id);
 
+  // const connectionRoom = socket.request.headers.room as string ?? 'default';
+  
+  console.log("rooms", socket.rooms);
+  
   // Send data to everyone who is connected
   
   socket.on("self-join", (room: string) => {
-    socket.join(room);
-    console.log("rooms", socket.rooms);
+    console.log('🚀 self-join ~ socket.on ~ room:', room);
+    if(!room) return;
 
+    socket.join(room);
     setTimeout(() => {
-      socket.emit("self-join", socket.id);
+      const playerData: PlayerData = {
+        player: socket.id,
+        room: room,
+        gameRoom: gameRooms[room]
+      };
+      socket.emit("self-join", playerData);
     }, 200);
   })
 
@@ -36,9 +46,17 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', (data: PlayerData) => {
-    if (gameRooms[data.room] && gameRooms[data.room].length >= 2) {
+    if(!data.room) return;
+
+    if (
+      gameRooms[data.room] 
+      && gameRooms[data.room].length >= 2
+      && !gameRooms[data.room].includes(data.player)
+    ) {
       socket.emit('room-full');
       socket.disconnect();
+
+      console.log("gameRooms", gameRooms);
       return;
     }
     if(!gameRooms[data.room]) {
@@ -47,39 +65,15 @@ io.on('connection', (socket) => {
     if (!gameRooms[data.room].includes(data.player)) {
       gameRooms[data.room].push(data.player);
     }
-    socket.to(data.room).emit('join', { player: data.player });
-
-    if (gameRooms[data.room].length === 1) {
-      socket.emit('your-are-player1');
-    } else {
-      socket.emit('your-are-player2');
-    }
-
-    const player2 = gameRooms[data.room].find(player => player !== socket.id);
-    if (!player2) return;
-
-    socket.emit('set-player2', { player: player2 });
-  })
-
-  socket.on("request-join", (room: string) => {
-    if(!gameRooms[room]) {
-      socket.emit("room-not-found");
-      return;
-    }
-    if(gameRooms[room].length >= 2) {
-      socket.emit("room-full");
-      return;
-    }
-    socket.emit("joined", room);
+    socket.to(data.room).emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
+    socket.emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
   })
 
   socket.on('disconnect', () => {
-    const connectionRoom = getConnectionRoom(socket.id);
-    if(
-      !connectionRoom
-      || !gameRooms[connectionRoom]
-      || gameRooms[connectionRoom].indexOf(socket.id) === -1
-    ) return;
+    const connectionRoom = Object.entries(gameRooms)
+      .find(([room, players]) => players.indexOf(socket.id) !== -1)?.[0]
+      ?? '';
+    if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
     gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
   });
@@ -93,7 +87,7 @@ io.on('connection', (socket) => {
     socket.to(data.room).emit('set-position', data);
   })
 
-  socket.on("set-active-player", (data: SetActivePlayerData) => {
+  socket.on("set-active-player", (data: PlayerData) => {
     socket.to(data.room).emit("set-active-player", data.player);
   })
 
@@ -103,14 +97,14 @@ io.on('connection', (socket) => {
 
   socket.on("new-game", (room: string) => {
     socket.to(room).emit("new-game");
+    socket.emit("new-game");
+  })
+
+  socket.onAnyOutgoing(() => {
+    console.log('gameRooms', gameRooms);
+  })
+  socket.onAny(() => {
+    console.log('gameRooms', gameRooms);
   })
 })
 
-interface SetActivePlayerData {
-  room: string;
-  player: string;
-}
-
-function getConnectionRoom(player: string, ) {
-  return Object.entries(gameRooms).find(([_, players]) => players.includes(player))?.[0];
-}
