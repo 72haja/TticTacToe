@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 
 // const URL = "https://ttictactoe-server.onrender.com";
 // const URL = "http://localhost:8080";
-const URL = "https://ttic-tac-toe-server-8gow9b854-72hajas-projects.vercel.app";
+const URL = "https://ttic-tac-toe.vercel.app";
 export const socket = io(URL, {
   // extraHeaders: {
   //   "room": room,
