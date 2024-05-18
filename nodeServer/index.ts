@@ -11,7 +11,8 @@ import { getFixedGameRoom, handleSetPosition } from '@/utils/gameFunctions';
 
 const io = new Server(8080, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: 'https://ttic-tac-toe.vercel.app',
+    // origin: 'http://localhost:3000',
     // origin: 'http://192.168.10.236:8081',
     // origin: 'https://ttictactoe.onrender.com',
   },
