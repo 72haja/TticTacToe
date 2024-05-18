@@ -105,8 +105,59 @@ function handleSetPosition(data: SetPositionData, game: Game, gameRooms: Record<
   return localGameField;
 }
 
+function getPlayersInField(outerGameField: OuterGameField){
+  return Object.values(outerGameField)
+    .reduce((acc, cv) => {
+      const values = Object.values(cv.gameField)
+        .filter((item) => item !== "")
+      acc.push(...values)
+      return acc
+    }, [] as string[])
+    .filter(
+      (item, index, arr) => arr.indexOf(item) === index
+    )
+}
+
+function getFixedGameRoom(
+  player: string,
+  game: Game,
+  gameRoom: string[]
+) : Game {
+  const playerInField = getPlayersInField(game.gameFields)
+    
+  const oldPlayerName = playerInField.find((item) => !gameRoom.includes(item))
+  if (!oldPlayerName) {
+      return game
+  }
+
+  const newOuterGameField: OuterGameField = JSON.parse(JSON.stringify(game.gameFields))
+  Object.values(newOuterGameField).forEach((field) => {
+      (Object.keys(field.gameField) as Position[]).forEach((key) => {
+          if (field.gameField[key] === oldPlayerName) {
+              field.gameField[key] = player
+          }
+      })
+      if(field.fieldWinner === oldPlayerName) {
+          field.fieldWinner = player
+      }
+  })
+  const newActivePlayer = game.activePlayer === oldPlayerName
+      ? player
+      : game.activePlayer
+
+  const newGame: Game = {
+      gameFields: newOuterGameField,
+      activePlayer: newActivePlayer,
+      allowedOuterGameField: game.allowedOuterGameField,
+      winner: game.winner
+  }
+  return newGame
+}
+
 export {
   getFieldWinner,
   getGameWinner,
   handleSetPosition,
+  getPlayersInField,
+  getFixedGameRoom,
 }

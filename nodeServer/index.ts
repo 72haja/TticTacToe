@@ -7,7 +7,7 @@ import { Game, OuterGameField, OuterGameFieldPosition, Position } from '../src/m
 import { PlayerData } from '../src/models/PlayerData';
 import { initOuterGameField } from '@/utils/initGameField';
 import { getAllowedOuterGameField } from '@/utils/getAllowedOuterGameField';
-import { handleSetPosition } from '@/utils/gameFunctions';
+import { getFixedGameRoom, handleSetPosition } from '@/utils/gameFunctions';
 
 const io = new Server(8080, {
   cors: {
@@ -55,7 +55,10 @@ io.on('connection', (socket) => {
     if (
       gameRooms[data.room] 
       && gameRooms[data.room].length >= 2
-      && !gameRooms[data.room].includes(data.player)
+      && !(
+        gameRooms[data.room].includes(data.player)
+        || gameRooms[data.room].includes("placeholder")
+      )
     ) {
       socket.emit('room-full');
       socket.disconnect();
@@ -71,7 +74,17 @@ io.on('connection', (socket) => {
       }
     }
     if (!gameRooms[data.room].includes(data.player)) {
-      gameRooms[data.room].push(data.player);
+      if(gameRooms[data.room].includes("placeholder")) {
+        gameRooms[data.room][0] = data.player;
+      } else {
+        gameRooms[data.room].push(data.player);
+      }
+      const updatedGame = getFixedGameRoom(
+        data.player, 
+        outerGameFields[data.room],
+        gameRooms[data.room]
+      );
+      outerGameFields[data.room] = updatedGame;
     }
     const dataToSend: PlayerData = {
       player: data.player,
@@ -79,19 +92,10 @@ io.on('connection', (socket) => {
       gameRoom: gameRooms[data.room],
       game: outerGameFields[data.room]
     }
-    console.log('dataToSend', dataToSend);
+
     socket.to(data.room).emit('join', dataToSend);
     socket.emit('join', dataToSend);
   })
-
-  socket.on('disconnect', () => {
-    const connectionRoom = Object.entries(gameRooms)
-      .find(([room, players]) => players.indexOf(socket.id) !== -1)?.[0]
-      ?? '';
-    if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
-    gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
-    socket.to(connectionRoom).emit('player-left', { player: socket.id });
-  });
 
   socket.on('set-position', (data: SetPositionData) => {
     const nextOuterGameField = handleSetPosition(data, outerGameFields[data.room], gameRooms);
@@ -119,11 +123,24 @@ io.on('connection', (socket) => {
     socket.emit("set-game", outerGameFields[room]);
   })
 
-  socket.onAnyOutgoing(() => {
-    console.log('gameRooms', gameRooms);
-  })
-  socket.onAny(() => {
-    console.log('gameRooms', gameRooms);
-  })
+  socket.on('disconnect', () => {
+    const connectionRoom = Object.entries(gameRooms)
+      .find(([room, players]) => players.indexOf(socket.id) !== -1)?.[0]
+      ?? '';
+    if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
+
+    const indexOfPLayer = gameRooms[connectionRoom].indexOf(socket.id);
+    if(indexOfPLayer === 0) { 
+      gameRooms[connectionRoom][0] = "placeholder"
+    } else {
+      gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
+    }
+
+    if(gameRooms[connectionRoom].length === 0) {
+      delete gameRooms[connectionRoom];
+      delete outerGameFields[connectionRoom];
+    }
+    socket.to(connectionRoom).emit('player-left', { player: socket.id });
+  });
 })
 
