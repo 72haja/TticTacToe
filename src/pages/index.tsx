@@ -8,18 +8,15 @@ import '../app/globals.css';
 import { EnterGame } from "@/components/enterGame/EnterGame";
 
 export default function Home() {
-  function getRandomId() {
-    return Math.floor(Math.random() * 1000);
-  }
-  
   const router = useRouter()
 
   function newGame() {
-    router.push(`/game/${getRandomId()}`);
+    router.push(`/game/${uuid()}`);
   }
 
   function enterGame(gameId: string) {
-    router.push(`/game/${gameId}`);
+    const filteredGameId = gameId.replace(/(.*\/game\/)/, "");
+    router.push(`/game/${filteredGameId}`);
   }
 
   const [snackbarState, setSnackbarState] = useState<SnackbarState>({

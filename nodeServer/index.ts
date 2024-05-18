@@ -3,7 +3,11 @@ import { Server } from 'socket.io';
 import { SetPositionData } from '../src/models/SetPositionData';
 import { SetGameFieldData } from '../src/models/SetGameFieldData';
 import { ResetPlayerState } from '../src/models/ResetPlayerState';
+import { Game, OuterGameField, OuterGameFieldPosition, Position } from '../src/models/GameField';
 import { PlayerData } from '../src/models/PlayerData';
+import { initOuterGameField } from '@/utils/initGameField';
+import { getAllowedOuterGameField } from '@/utils/getAllowedOuterGameField';
+import { getFixedGameRoom, handleSetPosition } from '@/utils/gameFunctions';
 
 const io = new Server(8080, {
   cors: {
@@ -16,6 +20,7 @@ const io = new Server(8080, {
 console.log("Server started");
 
 const gameRooms: {[roomName: string]: string[]} = {};
+const outerGameFields: {[roomName: keyof typeof gameRooms]: Game } = {};
 
 io.on('connection', (socket) => {
   console.log('made socket connection', socket.id);
@@ -27,7 +32,6 @@ io.on('connection', (socket) => {
   // Send data to everyone who is connected
   
   socket.on("self-join", (room: string) => {
-    console.log('🚀 self-join ~ socket.on ~ room:', room);
     if(!room) return;
 
     socket.join(room);
@@ -51,22 +55,72 @@ io.on('connection', (socket) => {
     if (
       gameRooms[data.room] 
       && gameRooms[data.room].length >= 2
-      && !gameRooms[data.room].includes(data.player)
+      && !(
+        gameRooms[data.room].includes(data.player)
+        || gameRooms[data.room].includes("placeholder")
+      )
     ) {
       socket.emit('room-full');
       socket.disconnect();
-
-      console.log("gameRooms", gameRooms);
       return;
     }
     if(!gameRooms[data.room]) {
       gameRooms[data.room] = [];
+      outerGameFields[data.room] = {
+        gameFields: initOuterGameField(),
+        activePlayer: data.player,
+        allowedOuterGameField: null,
+        winner: null,
+      }
     }
     if (!gameRooms[data.room].includes(data.player)) {
-      gameRooms[data.room].push(data.player);
+      if(gameRooms[data.room].includes("placeholder")) {
+        gameRooms[data.room][0] = data.player;
+      } else {
+        gameRooms[data.room].push(data.player);
+      }
+      const updatedGame = getFixedGameRoom(
+        data.player, 
+        outerGameFields[data.room],
+        gameRooms[data.room]
+      );
+      outerGameFields[data.room] = updatedGame;
     }
-    socket.to(data.room).emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
-    socket.emit('join', { player: data.player, gameRoom: gameRooms[data.room]});
+    const dataToSend: PlayerData = {
+      player: data.player,
+      room: data.room,
+      gameRoom: gameRooms[data.room],
+      game: outerGameFields[data.room]
+    }
+
+    socket.to(data.room).emit('join', dataToSend);
+    socket.emit('join', dataToSend);
+  })
+
+  socket.on('set-position', (data: SetPositionData) => {
+    const nextOuterGameField = handleSetPosition(data, outerGameFields[data.room], gameRooms);
+    outerGameFields[data.room] = nextOuterGameField;
+
+    socket.to(data.room).emit('set-game', nextOuterGameField);
+    socket.emit('set-game', nextOuterGameField);
+  })
+
+  socket.on("set-active-player", (data: PlayerData) => {
+    socket.to(data.room).emit("set-active-player", data.player);
+  })
+
+  socket.on("new-game", (room: string) => {
+    const nextActivePlayer = outerGameFields[room].winner === gameRooms[room][0]
+      ? gameRooms[room][1]
+      : gameRooms[room][0];
+    outerGameFields[room] = {
+      gameFields: initOuterGameField(),
+      activePlayer: nextActivePlayer,
+      allowedOuterGameField: null,
+      winner: null,
+    }
+    socket.to(room).emit("set-game", outerGameFields[room]);
+    socket.emit("set-game", outerGameFields[room]);
   })
 
   socket.on('disconnect', () => {
@@ -74,37 +128,19 @@ io.on('connection', (socket) => {
       .find(([room, players]) => players.indexOf(socket.id) !== -1)?.[0]
       ?? '';
     if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
-    gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
+
+    const indexOfPLayer = gameRooms[connectionRoom].indexOf(socket.id);
+    if(indexOfPLayer === 0) { 
+      gameRooms[connectionRoom][0] = "placeholder"
+    } else {
+      gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
+    }
+
+    if(gameRooms[connectionRoom].length === 0) {
+      delete gameRooms[connectionRoom];
+      delete outerGameFields[connectionRoom];
+    }
     socket.to(connectionRoom).emit('player-left', { player: socket.id });
   });
-
-  socket.on('reset-player-state', (data: ResetPlayerState) => {
-    if(!gameRooms[data.room] || gameRooms[data.room].indexOf(socket.id) === -1) return;
-    socket.to(data.room).emit('reset-player-state', data);
-  });
-
-  socket.on('set-position', (data: SetPositionData) => {
-    socket.to(data.room).emit('set-position', data);
-  })
-
-  socket.on("set-active-player", (data: PlayerData) => {
-    socket.to(data.room).emit("set-active-player", data.player);
-  })
-
-  socket.on("set-game-field", (data: SetGameFieldData) => {
-    socket.to(data.room).emit("set-game-field", data);
-  })
-
-  socket.on("new-game", (room: string) => {
-    socket.to(room).emit("new-game");
-    socket.emit("new-game");
-  })
-
-  socket.onAnyOutgoing(() => {
-    console.log('gameRooms', gameRooms);
-  })
-  socket.onAny(() => {
-    console.log('gameRooms', gameRooms);
-  })
 })
 

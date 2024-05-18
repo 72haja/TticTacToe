@@ -64,8 +64,6 @@ export function Field(props: FieldProps) {
   const [player2, setPlayer2]: [string, (player: string) => void] = useState("");
   const [activePlayer, setActivePlayer]: [string, (player: string) => void] = useState("");
 
-  const [activePlayerAfterPlayerLeft, setActivePlayerAfterPlayerLeft]: [IconName | "", (player: IconName | "") => void] = useState("" as IconName | "");
-
   socket.on("self-join", (data: PlayerData) => {
     setPlayer(data.player);
     const joinData: PlayerData = { player: data.player, room: props.room };
@@ -73,7 +71,6 @@ export function Field(props: FieldProps) {
   });
 
   socket.on("join", (data: PlayerData) => {
-    console.log('join', data);
     if (data.gameRoom[0] === player) {
       yourArePlayer1();
       setPlayer2(data.gameRoom[1]);
@@ -81,9 +78,10 @@ export function Field(props: FieldProps) {
     } else if (data.gameRoom[1] === player) {
       yourArePlayer2();
       setPlayer2(data.gameRoom[0]);
-      setActivePlayerFnk(data.gameRoom[0]);
       return;
     }
+    if(!data.game) return;
+    setActivePlayer(data.game.activePlayer);
   });
 
   const [roomFull, setRoomFull]: [boolean, (roomFull: boolean) => void] = useState(false);
@@ -93,7 +91,6 @@ export function Field(props: FieldProps) {
 
   socket.on("set-player2", (data: PlayerData) => {
     setPlayer2(data.player);
-    setActivePlayerFnk(data.player);
   });
 
   function yourArePlayer1() {
@@ -104,43 +101,10 @@ export function Field(props: FieldProps) {
     setPlayerIcon("CilXCircle");
   }
 
-  socket.on("reset-player-state", (data: ResetPlayerState) => {
-    const newPlayerIcon = data.iconFromOtherPlayer === "CilXCircle"
-      ? "CilCircle"
-      : "CilXCircle";
-    setPlayerIcon(newPlayerIcon);
-
-    setActivePlayer(data.activePlayer);
-  })
-
-  function setActivePlayerFnk(player: string) {
-    console.trace('player', player);
-    setActivePlayer(player);
-    socket.emit("set-active-player", { player, room: props.room });
-  };
-
-  socket.on("set-active-player", (playerProp: string) => {
-    if (activePlayerAfterPlayerLeft !== "") {
-      const oldActivePlayer = playerIcon === activePlayerAfterPlayerLeft
-        ? player
-        : player2;
-      setActivePlayerFnk(oldActivePlayer);
-      setActivePlayerAfterPlayerLeft("");
-      return;
-    } else {
-      setActivePlayer(playerProp);
-    }
-  });
-
   socket.on("player-left", (data: PlayerData) => {
     if (data.player !== player2) return
 
     setPlayer2("");
-    const activePlayerIcon: IconName = activePlayer === player
-      ? playerIcon === "CilXCircle" ? "CilXCircle" : "CilCircle"
-      : playerIcon === "CilXCircle" ? "CilCircle" : "CilXCircle"
-
-    setActivePlayerAfterPlayerLeft(activePlayerIcon);
   });
 
   return (
@@ -156,7 +120,7 @@ export function Field(props: FieldProps) {
           player2={player2}
           playerIcon={playerIcon}
           activePlayer={activePlayer}
-          setActivePlayer={setActivePlayerFnk}
+          setActivePlayer={setActivePlayer}
           room={props.room}
           roomFull={roomFull}
           setSnackbar={props.setSnackbar}
