@@ -1,4 +1,4 @@
-import { component$, useComputed$ } from "@builder.io/qwik";
+import { useEffect, useState } from "react";
 import { CilCircle, CilXCircle } from "../icons/icons";
 
 interface ItemProps {
@@ -7,25 +7,33 @@ interface ItemProps {
   wrapperClass?: string;
 }
 
-export default component$<ItemProps>(({
+export function Player2Icon({
   size = "",
   ...props
-}) => {
+}: ItemProps) {
 
-  const computedClass = useComputed$(() => {
-    return `${size} aspect-square`;
-  });
-  
-  const computedWrapperClass = useComputed$(() => {
-    return `w-full h-full grid grid-cols-1 grid-rows-1 ${props.wrapperClass}`;
-  })
+  const [computedClass, setComputedClass]: [string, (computedClass: string) => void] = useState(
+    `${size} aspect-square`
+  );
+
+  useEffect(() => {
+    setComputedClass(`${size} aspect-square`);
+  }, [size]);
+
+  const [computedWrapperClass, setComputedWrapperClass]: [string, (computedWrapperClass: string) => void] = useState(
+    `w-full h-full grid grid-cols-1 grid-rows-1 ${props.wrapperClass}`
+  );
+
+  useEffect(() => {
+    setComputedWrapperClass(`w-full h-full grid grid-cols-1 grid-rows-1 ${props.wrapperClass}`);
+  }, [props.wrapperClass]);
 
   return (
-    <div class={computedWrapperClass}>
+    <div className={computedWrapperClass}>
       {props.playerIcon === "CilCircle"
-        ? <CilXCircle class={computedClass} />
-        : <CilCircle class={computedClass} />
+        ? <CilXCircle className={computedClass} />
+        : <CilCircle className={computedClass} />
       }
     </div>
   );
-});
+};

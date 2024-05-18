@@ -1,124 +1,131 @@
-import { $, Signal, component$, useSignal } from "@builder.io/qwik";
 import { io } from "socket.io-client";
-import GameMetaInfo from "./GameMetaInfo";
-import ResponsiveFieldWrapper from "../responsiveFieldWrapper/ResponsiveFieldWrapper";
-import OuterGameField from "./OuterGameField";
+import { GameMetaInfo } from "./GameMetaInfo";
+import { ResponsiveFieldWrapper } from "../responsiveFieldWrapper/ResponsiveFieldWrapper";
+import { OuterGameField } from "./OuterGameField";
 import { ResetPlayerState } from "../../models/ResetPlayerState";
 import { IconName } from "../../models/IconName";
 import { PlayerData } from "../../models/PlayerData";
+import { useEffect, useState } from "react";
 
 
-const room = "room1";
-
-const URL = "https://ttictactoe-server.onrender.com";
-// const URL = "http://localhost:8080";
+// const URL = "https://ttictactoe-server.onrender.com";
+const URL = "http://localhost:8080";
 export const socket = io(URL, {
-  extraHeaders: {
-    "room": room,
-  },
+  // extraHeaders: {
+  //   "room": room,
+  // },
 });
 
-socket.onAny((event, ...args) => {
-  console.log("onAny", event, args);
-});
+// socket.onAny((event, ...args) => {
+//   console.log("onAny", event, args);
+// });
 
-socket.connect();
+// socket.connect();
 
-socket.emit("self-join");
 
-export default component$(() => {
-  const player = useSignal("");
-  const playerIcon: Signal<IconName> = useSignal("CilCircle");
-  const player2 = useSignal("");
-  const activePlayer = useSignal("");
+type FieldProps = {
+  setSnackbar: Function;
+  room: string;
+};
 
-  const activePlayerAfterPlayerLeft: Signal<IconName | ""> = useSignal("");
+export function Field(props: FieldProps) {
+  const [isConnected, setIsConnected] = useState(socket.connected);
+  
+  useEffect(() => {
+    function onConnect() {
+      setIsConnected(true);
+    }
+    
+    function onDisconnect() {
+      setIsConnected(false);
+    }
+    
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
 
-  socket.on("self-join", (data: string) => {
-    player.value = data;
-    const joinData: PlayerData = { player: data, room };
+    if (props.room) {
+      socket.emit("self-join", props.room);
+    }
+
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (props.room) {
+      socket.emit("self-join", props.room);
+    }
+  }, [props.room]);
+
+  const [player, setPlayer]: [string, (player: string) => void] = useState("");
+  const [playerIcon, setPlayerIcon]: [IconName, (icon: IconName) => void] = useState("CilCircle" as IconName);
+  const [player2, setPlayer2]: [string, (player: string) => void] = useState("");
+  const [activePlayer, setActivePlayer]: [string, (player: string) => void] = useState("");
+
+  socket.on("self-join", (data: PlayerData) => {
+    setPlayer(data.player);
+    const joinData: PlayerData = { player: data.player, room: props.room };
     socket.emit("join", joinData);
   });
 
   socket.on("join", (data: PlayerData) => {
-    if (data.player === player.value) return;
-
-    player2.value = data.player;
+    if (data.gameRoom[0] === player) {
+      yourArePlayer1();
+      setPlayer2(data.gameRoom[1]);
+      return;
+    } else if (data.gameRoom[1] === player) {
+      yourArePlayer2();
+      setPlayer2(data.gameRoom[0]);
+      return;
+    }
+    if(!data.game) return;
+    setActivePlayer(data.game.activePlayer);
   });
 
-  const roomFull = useSignal(false);
+  const [roomFull, setRoomFull]: [boolean, (roomFull: boolean) => void] = useState(false);
   socket.on("room-full", () => {
-    roomFull.value = true;
+    setRoomFull(true);
   });
 
   socket.on("set-player2", (data: PlayerData) => {
-    player2.value = data.player;
-    setActivePlayer(data.player);
+    setPlayer2(data.player);
   });
 
-  socket.on("your-are-player1", () => {
-    playerIcon.value = "CilCircle";
-  })
+  function yourArePlayer1() {
+    setPlayerIcon("CilCircle");
+  }
 
-  socket.on("your-are-player2", () => {
-    playerIcon.value = "CilXCircle";
-  })
-
-  socket.on("reset-player-state", (data: ResetPlayerState) => {
-    playerIcon.value = data.iconFromOtherPlayer === "CilXCircle"
-      ? "CilCircle"
-      : "CilXCircle";
-
-    activePlayer.value = data.activePlayer
-  })
-
-  const setActivePlayer = $((player: string) => {
-    activePlayer.value = player;
-    socket.emit("set-active-player", { player, room });
-  });
-
-  socket.on("set-active-player", (playerProp: string) => {
-    if (activePlayerAfterPlayerLeft.value !== "") {
-      const oldActivePlayer = playerIcon.value === activePlayerAfterPlayerLeft.value
-        ? player.value
-        : player2.value;
-      setActivePlayer(oldActivePlayer);
-      activePlayerAfterPlayerLeft.value = "";
-      return;
-    } else {
-      activePlayer.value = playerProp;
-    }
-  });
+  function yourArePlayer2() {
+    setPlayerIcon("CilXCircle");
+  }
 
   socket.on("player-left", (data: PlayerData) => {
-    if (data.player !== player2.value) return
+    if (data.player !== player2) return
 
-    player2.value = "";
-    const activePlayerIcon: IconName = activePlayer.value === player.value
-      ? playerIcon.value === "CilXCircle" ? "CilXCircle" : "CilCircle"
-      : playerIcon.value === "CilXCircle" ? "CilCircle" : "CilXCircle"
-
-    activePlayerAfterPlayerLeft.value = activePlayerIcon
+    setPlayer2("");
   });
 
   return (
-    <div class="w-full h-full flex flex-col gap-2 items-center justify-center">
+    <div className="w-full h-full flex flex-col gap-2 items-center justify-center">
       <GameMetaInfo
-        playerIcon={playerIcon.value}
-        activePlayer={activePlayer.value}
-        player={player.value}
+        playerIcon={playerIcon}
+        activePlayer={activePlayer}
+        player={player}
       />
       <ResponsiveFieldWrapper>
         <OuterGameField
-          player={player.value}
-          player2={player2.value}
-          playerIcon={playerIcon.value}
-          activePlayer={activePlayer.value}
-          setActivePlayer$={setActivePlayer}
-          room={room}
-          roomFull={roomFull.value}
+          player={player}
+          player2={player2}
+          playerIcon={playerIcon}
+          activePlayer={activePlayer}
+          setActivePlayer={setActivePlayer}
+          room={props.room}
+          roomFull={roomFull}
+          setSnackbar={props.setSnackbar}
         />
       </ResponsiveFieldWrapper>
     </div>
   );
-});
+};

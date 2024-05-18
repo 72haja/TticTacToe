@@ -1,11 +1,11 @@
-import { $, component$, useComputed$, useSignal } from "@builder.io/qwik";
-import { GameField, OuterGameFieldPosition, Position } from "../../models/GameField.ts";
-import { SetPositionData } from "../../models/SetPositionData.ts";
-import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField.ts";
-import { socket } from "./Field.tsx";
-import Player1Icon from "./Player1Icon.tsx";
-import Player2Icon from "./Player2Icon.tsx";
-import TicTacToeCell from "./TicTacToeCell.tsx";
+import { useEffect, useState } from "react";
+import { GameField as GameFieldModel, OuterGameFieldPosition, Position } from "../../models/GameField";
+import { SetPositionData } from "../../models/SetPositionData";
+import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField";
+import { socket } from "./Field";
+import { Player1Icon } from "./Player1Icon";
+import { Player2Icon } from "./Player2Icon";
+import { TicTacToeCell } from "./TicTacToeCell";
 
 interface ItemProps {
   player: any;
@@ -14,44 +14,37 @@ interface ItemProps {
   activePlayer: string;
   outerGameFieldPosition: OuterGameFieldPosition;
   room: string;
-  gameField: GameField;
+  gameField: GameFieldModel;
   gameReady: boolean;
   fieldWinner: string | null;
   disabled: boolean;
-  setActivePlayer$: Function;
-  setPosition$: Function;
-  checkWinner$: Function;
+  setPosition: (outerGameFieldPos: OuterGameFieldPosition, pos: Position, player: string) => void;
 }
 
-export default component$<ItemProps>((props) => {
-  const gameFinished = useSignal(false);
+export function GameField(props: ItemProps) {
+  // const gameFinished = useSignal(false);
+  const [gameFinished, setGameFinished]: [boolean, (gameFinished: boolean) => void] = useState(false);
 
-  const sendPosition = $(async (pos: Position) => {
-    const setPositionData: SetPositionData = {
-      outerGameFieldPosition: props.outerGameFieldPosition,
-      room: props.room,
-      position: pos,
-      allowedOuterGameField: getAllowedOuterGameField(pos),
-    };
-    props.setPosition$(props.outerGameFieldPosition, pos, props.player);
-    socket.emit("set-position", setPositionData);
-    if (await props.checkWinner$(props.outerGameFieldPosition)) {
-      return;
+  function sendPosition(pos: Position) {
+    props.setPosition(props.outerGameFieldPosition, pos, props.player);
+  };
+
+  const defaultClass = "grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] md:border-2 border border-gray-300";
+  const [computedClass, setComputedClass]: [string, (computedClass: string) => void] = useState(
+    defaultClass
+  );
+
+  useEffect(() => {
+    if (props.disabled) {
+      setComputedClass(`${defaultClass} cursor-not-allowed opacity-50 pointer-events-none`);
+    } else {
+      setComputedClass(defaultClass);
     }
-    props.setActivePlayer$(props.player2);
-  });
-
-  const computedClass = useComputed$(() => {
-    const defaultClass = "grid grid-cols-3 grid-rows-3 w-full h-full max-w-[100%] md:border-2 border border-gray-300";
-
-    return props.disabled ?
-      `${defaultClass} cursor-not-allowed opacity-50 pointer-events-none`
-      : defaultClass;
-  });
+  }, [props.disabled]);
 
   return (
-    <div class="w-full h-full">
-      <div class={computedClass}>
+    <div className="w-full h-full">
+      <div className={computedClass}>
         {
           props.fieldWinner === null
           && (Object.keys(props.gameField) as Position[]).map((position: Position) => {
@@ -64,8 +57,8 @@ export default component$<ItemProps>((props) => {
                 activePlayer={props.activePlayer}
                 position={position}
                 gameField={props.gameField}
-                buttonClicked$={sendPosition}
-                gameFinished={gameFinished.value}
+                buttonClicked={sendPosition}
+                gameFinished={gameFinished}
               />
             );
           })
@@ -84,4 +77,4 @@ export default component$<ItemProps>((props) => {
       </div>
     </div>
   );
-});
+};

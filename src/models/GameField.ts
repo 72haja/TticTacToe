@@ -13,3 +13,10 @@ export type OuterGameField = {
     fieldWinner: string | null
   };
 }
+
+export declare type Game = {
+  gameFields: OuterGameField;
+  activePlayer: string;
+  allowedOuterGameField: OuterGameFieldPosition | null;
+  winner: string | null;
+}
