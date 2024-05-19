@@ -19,7 +19,7 @@ const io = new Server(server, {
   cors: {
     // origin: 'http://localhost:3000',
     // origin: 'https://ttic-tac-toe.vercel.app',
-    origin: 'https://ttictactoe-webservice.onrender.com',
+    origin: 'https://ttictactoe.onrender.com',
   }
 });
 
