@@ -24,8 +24,7 @@ const io = new Server(server, {
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-  res.send("Express on Vercel");
+  res.send("Server is running!");
 });
 
 const gameRooms: {[roomName: string]: string[]} = {};
