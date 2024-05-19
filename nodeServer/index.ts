@@ -8,17 +8,25 @@ import { PlayerData } from '../src/models/PlayerData';
 import { initOuterGameField } from '@/utils/initGameField';
 import { getAllowedOuterGameField } from '@/utils/getAllowedOuterGameField';
 import { getFixedGameRoom, handleSetPosition } from '@/utils/gameFunctions';
+import express from 'express';
+import http from 'http';
 
-const io = new Server(8080, {
+const app = express();
+const port = 8080;
+const server = http.createServer(app)
+
+const io = new Server(server, {
   cors: {
-    origin: 'https://ttic-tac-toe.vercel.app',
     // origin: 'http://localhost:3000',
-    // origin: 'http://192.168.10.236:8081',
-    // origin: 'https://ttictactoe.onrender.com',
-  },
+    // origin: 'https://ttic-tac-toe.vercel.app',
+    origin: 'https://ttictactoe-webservice.onrender.com',
+  }
 });
 
-console.log("Server started");
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+  res.send("Express on Vercel");
+});
 
 const gameRooms: {[roomName: string]: string[]} = {};
 const outerGameFields: {[roomName: keyof typeof gameRooms]: Game } = {};
@@ -145,3 +153,8 @@ io.on('connection', (socket) => {
   });
 })
 
+server.listen(port, () => {
+  console.log(`Server started on port ${port}`);
+});
+
+export default app;

@@ -8,14 +8,10 @@ import { PlayerData } from "../../models/PlayerData";
 import { useEffect, useState } from "react";
 
 
-// const URL = "https://ttictactoe-server.onrender.com";
+const URL = "https://ttictactoe-server.onrender.com";
 // const URL = "http://localhost:8080";
-const URL = "https://ttic-tac-toe-server.vercel.app";
-export const socket = io(URL, {
-  // extraHeaders: {
-  //   "room": room,
-  // },
-});
+// const URL = "https://ttic-tac-toe-server.vercel.app";
+export const socket = io(URL);
 
 // socket.onAny((event, ...args) => {
 //   console.log("onAny", event, args);
