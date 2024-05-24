@@ -20,6 +20,7 @@ interface ItemProps {
   room: string;
   roomFull: boolean;
   setSnackbar: Function;
+  onVictoryDialogClose: () => void;
 }
 
 export function OuterGameField(props: ItemProps) {
@@ -86,6 +87,11 @@ export function OuterGameField(props: ItemProps) {
     setGameDraw(false);
   };
 
+  function onVictoryDialogClose() {
+    setGameFinished(false);
+    props.onVictoryDialogClose();
+  }
+
   return (
     <div className="w-full h-full">
       {gameFinished
@@ -96,6 +102,7 @@ export function OuterGameField(props: ItemProps) {
           activePlayer={props.activePlayer}
           room={props.room}
           gameDraw={gameDraw}
+          onVictoryDialogClose={onVictoryDialogClose}
         />
       }
       {

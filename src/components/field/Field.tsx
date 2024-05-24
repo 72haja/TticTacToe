@@ -104,6 +104,16 @@ export function Field(props: FieldProps) {
     setPlayer2("");
   });
 
+  const [showNewGameButton, setShowNewGameButton]: [boolean, (showNewGameButton: boolean) => void] = useState(false);
+  function onVictoryDialogClose() {
+    setShowNewGameButton(true);
+  }
+
+  function newGame() {
+    socket.emit("new-game", props.room);
+    setShowNewGameButton(false);
+  }
+
   return (
     <div className="w-full h-full flex flex-col gap-2 items-center justify-center">
       <GameMetaInfo
@@ -112,16 +122,27 @@ export function Field(props: FieldProps) {
         player={player}
       />
       <ResponsiveFieldWrapper>
-        <OuterGameField
-          player={player}
-          player2={player2}
-          playerIcon={playerIcon}
-          activePlayer={activePlayer}
-          setActivePlayer={setActivePlayer}
-          room={props.room}
-          roomFull={roomFull}
-          setSnackbar={props.setSnackbar}
-        />
+        <div className="w-full h-full flex flex-col gap-4">
+          <OuterGameField
+            player={player}
+            player2={player2}
+            playerIcon={playerIcon}
+            activePlayer={activePlayer}
+            setActivePlayer={setActivePlayer}
+            room={props.room}
+            roomFull={roomFull}
+            setSnackbar={props.setSnackbar}
+            onVictoryDialogClose={onVictoryDialogClose}
+          />
+          {showNewGameButton
+            && <button
+              onClick={() => newGame()}
+              className="bg-white text-green-800 rounded-lg p-2 md:col-span-1 col-span-2 max-w-72"
+            >
+              Neues Spiel
+            </button>
+          }
+        </div>
       </ResponsiveFieldWrapper>
     </div>
   );
