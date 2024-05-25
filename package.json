@@ -10,7 +10,7 @@
     "test": "vitest",
     "lint": "next lint",
     "server": "tsx nodeServer/index.ts",
-    "server-js": "node nodeServer/index.js"
+    "server-dev": "tsx nodeServer/index.ts http://localhost:3000"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",

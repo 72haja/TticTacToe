@@ -12,11 +12,10 @@ const app = express();
 const port = 8080;
 const server = http.createServer(app)
 
+const clientUrl = process.argv[2] || "https://ttictactoe.onrender.com";
 const io = new Server(server, {
   cors: {
-    // origin: 'http://localhost:3000',
-    // origin: 'https://ttic-tac-toe.vercel.app',
-    origin: 'https://ttictactoe.onrender.com',
+    origin: clientUrl,
   }
 });
 

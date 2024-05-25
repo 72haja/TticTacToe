@@ -8,11 +8,8 @@ import { useEffect, useState } from "react";
 import { SnackbarState } from "@/reducers/snackbarReducer";
 import { v4 as uuid } from "uuid";
 
-
-const URL = "https://ttictactoe-server.onrender.com";
-// const URL = "http://localhost:8080";
-// const URL = "https://ttic-tac-toe-server.vercel.app";
-export const socket = io(URL);
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL as string;
+export const socket = io(serverUrl);
 
 type FieldProps = {
   setSnackbar: (snackbarState: SnackbarState) => void;
