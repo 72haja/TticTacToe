@@ -8,7 +8,7 @@ import { GameField } from "./GameField";
 import { VictoryDialog } from "./VictoryDialog";
 import { SnackbarState } from "@/reducers/snackbarReducer";
 import { v4 as uuid } from "uuid";
-import { ShareIcon } from "../icons/icons";
+import { LoadingIcon, ShareIcon } from "../icons/icons";
 
 interface ItemProps {
   player: any;
@@ -188,7 +188,10 @@ export function OuterGameField(props: ItemProps) {
               }
             </div>
             : <div>
-                <p className="text-lg"> Waiting for player 2... </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg"> Waiting for player 2</p>
+                  <LoadingIcon />
+                </div>
                 <p className="text-sm text-gray-300">
                   Share the url to invite other players.
                 </p>

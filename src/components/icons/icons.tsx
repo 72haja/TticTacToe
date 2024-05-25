@@ -59,3 +59,13 @@ export function ShareIcon(props: IconProps, key: string = uuid()) {
     </svg>
   )
 }
+
+export function LoadingIcon() {
+  return (
+    <div className="w-max h-max flex flex-row gap-1">
+      <div className="w-2 h-2 bg-gray-300 rounded-full animate-bounce"></div>
+      <div className="w-2 h-2 bg-gray-300 rounded-full animate-bounce animation-delay-200"></div>
+      <div className="w-2 h-2 bg-gray-300 rounded-full animate-bounce animation-delay-400"></div>
+    </div>
+  )
+}
