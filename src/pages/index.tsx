@@ -4,8 +4,9 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { v4 as uuid } from "uuid";
 
-import '../app/globals.css';
 import { EnterGame } from "@/components/enterGame/EnterGame";
+import '../app/globals.css';
+import { Footer } from "@/components/footer/Footer";
 
 export default function Home() {
   const router = useRouter()
@@ -43,6 +44,7 @@ export default function Home() {
           setSnackbarState={setSnackbarState}
         />
       </div>
+      <Footer />
     </main>
   );
 }
