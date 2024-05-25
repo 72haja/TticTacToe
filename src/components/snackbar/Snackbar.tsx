@@ -32,7 +32,7 @@ export function Snackbar(props: SnackbarState & { setSnackbarState: (state: Snac
   const [snackbarWrapperColor, setSnackbarWrapperColor]: [
     string, 
     (color: string) => void
-  ] = useState("bg-teal-100 border-teal-500 text-teal-900");
+  ] = useState("bg-white border-teal-500 text-teal-900");
 
   const [snackbarTextColor, setSnackbarTextColor]: [
     string,
@@ -43,7 +43,7 @@ export function Snackbar(props: SnackbarState & { setSnackbarState: (state: Snac
   useEffect(() => {
     switch (props.color) {
       case "success":
-        setSnackbarWrapperColor("bg-teal-100 border-teal-500 text-teal-900");
+        setSnackbarWrapperColor("bg-white border-teal-500 text-teal-900");
         setSnackbarTextColor("text-teal-500");
         break;
       case "error":
@@ -51,7 +51,7 @@ export function Snackbar(props: SnackbarState & { setSnackbarState: (state: Snac
         setSnackbarTextColor("text-red-500");
         break;
       default:
-        setSnackbarWrapperColor("bg-teal-100 border-teal-500 text-teal-900");
+        setSnackbarWrapperColor("bg-white border-teal-500 text-teal-900");
         setSnackbarTextColor("text-teal-500");
         break;
     }
@@ -63,7 +63,7 @@ export function Snackbar(props: SnackbarState & { setSnackbarState: (state: Snac
         props.show
           ? <div
             className={
-              "border-t-4 rounded-b px-4 py-3 shadow-md w-[400px] max-w-[400px]"
+              "border-t-4 rounded-b px-4 py-3 shadow-md w-[400px] max-w-[400px] "
               + snackbarWrapperColor
             }
             role="alert"

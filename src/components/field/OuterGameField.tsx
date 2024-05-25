@@ -1,15 +1,11 @@
-import { v4 as uuid } from "uuid";
+import { PlayerData } from "@/models/PlayerData";
+import { useEffect, useState } from "react";
 import { Game, GameField as GameFieldModel, OuterGameField as OuterGameFieldModel, OuterGameFieldPosition, Position } from "../../models/GameField";
-import { ResetPlayerState } from "../../models/ResetPlayerState";
-import { SetGameFieldData } from "../../models/SetGameFieldData";
 import { SetPositionData } from "../../models/SetPositionData";
-import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField";
 import { initOuterGameField } from "../../utils/initGameField";
 import { socket } from "./Field";
 import { GameField } from "./GameField";
 import { VictoryDialog } from "./VictoryDialog";
-import { useEffect, useState } from "react";
-import { PlayerData } from "@/models/PlayerData";
 
 interface ItemProps {
   player: any;

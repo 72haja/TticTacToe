@@ -1,15 +1,12 @@
 import { Server } from 'socket.io';
 
-import { SetPositionData } from '../src/models/SetPositionData';
-import { SetGameFieldData } from '../src/models/SetGameFieldData';
-import { ResetPlayerState } from '../src/models/ResetPlayerState';
-import { Game, OuterGameField, OuterGameFieldPosition, Position } from '../src/models/GameField';
-import { PlayerData } from '../src/models/PlayerData';
-import { initOuterGameField } from '@/utils/initGameField';
-import { getAllowedOuterGameField } from '@/utils/getAllowedOuterGameField';
 import { getFixedGameRoom, handleSetPosition } from '@/utils/gameFunctions';
+import { initOuterGameField } from '@/utils/initGameField';
 import express from 'express';
 import http from 'http';
+import { Game } from '../src/models/GameField';
+import { PlayerData } from '../src/models/PlayerData';
+import { SetPositionData } from '../src/models/SetPositionData';
 
 const app = express();
 const port = 8080;

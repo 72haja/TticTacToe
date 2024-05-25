@@ -2,10 +2,11 @@ import { io } from "socket.io-client";
 import { GameMetaInfo } from "./GameMetaInfo";
 import { ResponsiveFieldWrapper } from "../responsiveFieldWrapper/ResponsiveFieldWrapper";
 import { OuterGameField } from "./OuterGameField";
-import { ResetPlayerState } from "../../models/ResetPlayerState";
 import { IconName } from "../../models/IconName";
 import { PlayerData } from "../../models/PlayerData";
 import { useEffect, useState } from "react";
+import { SnackbarState } from "@/reducers/snackbarReducer";
+import { v4 as uuid } from "uuid";
 
 
 const URL = "https://ttictactoe-server.onrender.com";
@@ -13,21 +14,24 @@ const URL = "https://ttictactoe-server.onrender.com";
 // const URL = "https://ttic-tac-toe-server.vercel.app";
 export const socket = io(URL);
 
-// socket.onAny((event, ...args) => {
-//   console.log("onAny", event, args);
-// });
-
-// socket.connect();
-
-
 type FieldProps = {
-  setSnackbar: Function;
+  setSnackbar: (snackbarState: SnackbarState) => void;
   room: string;
 };
 
 export function Field(props: FieldProps) {
   const [isConnected, setIsConnected] = useState(socket.connected);
-  
+  const [connectionError, setConnectionError] = useState(false);
+
+  socket.on('connect_error', err => handleErrors(err))
+  socket.on('connect_failed', err => handleErrors(err))
+  socket.on('disconnect', err => handleErrors(err))
+
+  function handleErrors(err: any) {
+    setIsConnected(false)
+    setConnectionError(true)
+  }
+
   useEffect(() => {
     function onConnect() {
       setIsConnected(true);
@@ -52,7 +56,7 @@ export function Field(props: FieldProps) {
 
   useEffect(() => {
     if (props.room) {
-      socket.emit("self-join", props.room);
+      socket.emit("self-join", props.room)
     }
   }, [props.room]);
 
@@ -68,6 +72,21 @@ export function Field(props: FieldProps) {
   });
 
   socket.on("join", (data: PlayerData) => {
+    const snackbarState: SnackbarState = {
+      show: true,
+      text: "",
+      color: "success",
+      timeout: 5000,
+      id: uuid(),
+    }
+    if(connectionError) {
+      snackbarState.text = "Connection reestablished";
+    } else {
+      snackbarState.text = "Connection established";
+    }
+    props.setSnackbar(snackbarState)
+    setConnectionError(false);
+
     if (data.gameRoom[0] === player) {
       yourArePlayer1();
       setPlayer2(data.gameRoom[1]);
@@ -123,6 +142,13 @@ export function Field(props: FieldProps) {
       />
       <ResponsiveFieldWrapper>
         <div className="w-full h-full flex flex-col gap-4">
+          {
+            connectionError
+              && <div className="w-full bg-red-500 text-white rounded-lg p-2">
+                <p className="font-bold">Connection error. </p>
+                <p>Please wait a moment till the connection is reestablished or try again later.</p>
+              </div>
+          }
           <OuterGameField
             player={player}
             player2={player2}
