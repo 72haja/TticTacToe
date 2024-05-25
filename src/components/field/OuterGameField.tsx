@@ -124,13 +124,17 @@ export function OuterGameField(props: ItemProps) {
       global.navigator.share({
         title: 'Teilen Sie diesen Link',
         url: window.location.href
-      }).catch((error) => props.setSnackbar({
-        color: "error",
-        show: true,
-        text: "Error sharing: " + error,
-        id: uuid(),
-        timeout: 3000,
-      }));
+      }).catch((error) => {
+        if(error.name === "AbortError") return;
+
+        props.setSnackbar({
+          color: "error",
+          show: true,
+          text: "Error sharing: " + error,
+          id: uuid(),
+          timeout: 3000,
+        })
+      });
     } else {
       props.setSnackbar({
         color: "error",
