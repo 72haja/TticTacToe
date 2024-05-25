@@ -58,7 +58,7 @@ export function Snackbar(props: SnackbarState & { setSnackbarState: (state: Snac
   }, [props.color]);
 
   return (
-    <div className="absolute bottom-0 left-0 w-full p-4 flex justify-center">
+    <div className="absolute z-10 bottom-10 left-0 w-full p-4 flex justify-center">
       {
         props.show
           ? <div

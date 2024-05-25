@@ -35,15 +35,15 @@ export default function Home() {
           newGame={newGame}
           enterGame={enterGame}
         />
-        <Snackbar
-          show={snackbarState.show}
-          text={snackbarState.text}
-          color={snackbarState.color}
-          timeout={snackbarState.timeout}
-          id={snackbarState.id}
-          setSnackbarState={setSnackbarState}
-        />
       </div>
+      <Snackbar
+        show={snackbarState.show}
+        text={snackbarState.text}
+        color={snackbarState.color}
+        timeout={snackbarState.timeout}
+        id={snackbarState.id}
+        setSnackbarState={setSnackbarState}
+      />
       <Footer />
     </main>
   );

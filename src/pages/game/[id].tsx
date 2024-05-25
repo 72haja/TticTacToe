@@ -38,15 +38,15 @@ export default function Home() {
           setSnackbar={setSnackbarState}
           room={router.query.id as string}
         />
-        <Snackbar
-          show={snackbarState.show}
-          text={snackbarState.text}
-          color={snackbarState.color}
-          timeout={snackbarState.timeout}
-          id={snackbarState.id}
-          setSnackbarState={setSnackbarState}
-        />
       </div>
+      <Snackbar
+        show={snackbarState.show}
+        text={snackbarState.text}
+        color={snackbarState.color}
+        timeout={snackbarState.timeout}
+        id={snackbarState.id}
+        setSnackbarState={setSnackbarState}
+      />
       <Footer />
     </main>
   );
