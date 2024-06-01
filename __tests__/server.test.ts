@@ -1,4 +1,4 @@
-import { getFieldWinner, getFixedGameRoom, getGameWinner, getPlayersInField, handleSetPosition } from '@/utils/gameFunctions';
+import { getFieldWinner, getFixedGameRoom, getGameWinner, getPlayersInField, handleSetPosition, switchPlayerInField } from '@/utils/gameFunctions';
 import { Game, OuterGameField } from '@/models/GameField';
 import { initOuterGameField } from '@/utils/initGameField';
 import { describe, expect, it } from 'vitest';
@@ -837,3 +837,77 @@ describe('getFixedGameRoom', () => {
     expect(result).toEqual(expectedGame);
   })
 })
+
+describe('switchPlayerInField', () => {
+  it('should return the updated game field with the switched players', () => {
+    // Arrange
+    const game: Game = {
+      gameFields: {
+        ...sampleInitGameField,
+        "center-center": {
+          gameField: {
+            "0.0": "X",
+            "0.1": "O",
+            "0.2": "X",
+            "1.0": "X",
+            "1.1": "O",
+            "1.2": "X",
+            "2.0": "",
+            "2.1": "O",
+            "2.2": "",
+          },
+          fieldWinner: "O"
+        }
+      },
+      activePlayer: "O",
+      allowedOuterGameField: "center-left",
+      winner: null
+    };
+
+    // Act
+    const result = switchPlayerInField(game);
+
+    // Assert
+    const expectedOuterGameField: OuterGameField = {
+      ...sampleInitGameField,
+      "center-center": {
+        gameField: {
+          "0.0": "O",
+          "0.1": "X",
+          "0.2": "O",
+          "1.0": "O",
+          "1.1": "X",
+          "1.2": "O",
+          "2.0": "",
+          "2.1": "X",
+          "2.2": "",
+        },
+        fieldWinner: "X"
+      }
+    };
+    const expectedGame: Game = {
+      gameFields: expectedOuterGameField,
+      activePlayer: "X",
+      allowedOuterGameField: "center-left",
+      winner: null
+    };
+
+    expect(result).toEqual(expectedGame);
+  });
+
+  it('should return the same game field if there are no players in the field', () => {
+    // Arrange
+    const game: Game = {
+      gameFields: initOuterGameField(),
+      activePlayer: "O",
+      allowedOuterGameField: "center-left",
+      winner: null
+    };
+
+    // Act
+    const result = switchPlayerInField(game);
+
+    // Assert
+    expect(result).toEqual(game);
+  });
+});

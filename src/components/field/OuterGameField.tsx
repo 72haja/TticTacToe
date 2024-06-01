@@ -86,6 +86,7 @@ export function OuterGameField(props: ItemProps) {
   socket.on("join", (data: PlayerData) => {
     if(!data.game) return;
     setOuterGameField(data.game.gameFields);
+    setAllowedOuterGameField(data.game.allowedOuterGameField);
   });
 
   socket.on("set-outer-game-fields", (outerGameField: OuterGameFieldModel) => {

@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 
-import { getFixedGameRoom, handleSetPosition } from '@/utils/gameFunctions';
+import { getFixedGameRoom, handleSetPosition, switchPlayerInField } from '@/utils/gameFunctions';
 import { initOuterGameField } from '@/utils/initGameField';
 import express from 'express';
 import http from 'http';
@@ -23,20 +23,20 @@ app.get('/', (req, res) => {
   res.send("Server is running!");
 });
 
-const gameRooms: {[roomName: string]: string[]} = {};
-const outerGameFields: {[roomName: keyof typeof gameRooms]: Game } = {};
+const gameRooms: { [roomName: string]: string[] } = {};
+const outerGameFields: { [roomName: keyof typeof gameRooms]: Game } = {};
 
 io.on('connection', (socket) => {
   console.log('made socket connection', socket.id);
 
   // const connectionRoom = socket.request.headers.room as string ?? 'default';
-  
+
   console.log("rooms", socket.rooms);
-  
+
   // Send data to everyone who is connected
-  
+
   socket.on("self-join", (room: string) => {
-    if(!room) return;
+    if (!room) return;
 
     socket.join(room);
     setTimeout(() => {
@@ -54,10 +54,10 @@ io.on('connection', (socket) => {
   })
 
   socket.on('join', (data: PlayerData) => {
-    if(!data.room) return;
+    if (!data.room) return;
 
     if (
-      gameRooms[data.room] 
+      gameRooms[data.room]
       && gameRooms[data.room].length >= 2
       && !(
         gameRooms[data.room].includes(data.player)
@@ -68,7 +68,7 @@ io.on('connection', (socket) => {
       socket.disconnect();
       return;
     }
-    if(!gameRooms[data.room]) {
+    if (!gameRooms[data.room]) {
       gameRooms[data.room] = [];
       outerGameFields[data.room] = {
         gameFields: initOuterGameField(),
@@ -78,13 +78,13 @@ io.on('connection', (socket) => {
       }
     }
     if (!gameRooms[data.room].includes(data.player)) {
-      if(gameRooms[data.room].includes("placeholder")) {
+      if (gameRooms[data.room].includes("placeholder")) {
         gameRooms[data.room][0] = data.player;
       } else {
         gameRooms[data.room].push(data.player);
       }
       const updatedGame = getFixedGameRoom(
-        data.player, 
+        data.player,
         outerGameFields[data.room],
         gameRooms[data.room]
       );
@@ -127,20 +127,38 @@ io.on('connection', (socket) => {
     socket.emit("set-game", outerGameFields[room]);
   })
 
+  socket.on("remove-other-player", (room: string) => {
+    const playerIndex = gameRooms[room].indexOf(socket.id);
+    const otherPlayer = playerIndex === 0 ? gameRooms[room][1] : gameRooms[room][0];
+    gameRooms[room] = [socket.id];
+    socket.to(room).emit("player-left", { player: otherPlayer });
+    socket.emit("player-left", { player: otherPlayer });
+  })
+
+  socket.on("switch-player", (room: string) => {
+    const currentGame = outerGameFields[room]
+    if (!currentGame) return;
+
+    const updatedGame = switchPlayerInField(outerGameFields[room])
+    outerGameFields[room] = updatedGame;
+    socket.to(room).emit("set-game", updatedGame);
+    socket.emit("set-game", updatedGame);
+  })
+
   socket.on('disconnect', () => {
     const connectionRoom = Object.entries(gameRooms)
       .find(([room, players]) => players.indexOf(socket.id) !== -1)?.[0]
       ?? '';
-    if(!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
+    if (!gameRooms[connectionRoom] || gameRooms[connectionRoom].indexOf(socket.id) === -1) return;
 
     const indexOfPLayer = gameRooms[connectionRoom].indexOf(socket.id);
-    if(indexOfPLayer === 0) { 
+    if (indexOfPLayer === 0) {
       gameRooms[connectionRoom][0] = "placeholder"
     } else {
       gameRooms[connectionRoom].splice(gameRooms[connectionRoom].indexOf(socket.id), 1);
     }
 
-    if(gameRooms[connectionRoom].length === 0) {
+    if (gameRooms[connectionRoom].length === 0) {
       delete gameRooms[connectionRoom];
       delete outerGameFields[connectionRoom];
     }

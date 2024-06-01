@@ -154,10 +154,46 @@ function getFixedGameRoom(
   return newGame
 }
 
+function switchPlayerInField(game: Game) {
+  const newOuterGameField: OuterGameField = JSON.parse(JSON.stringify(game.gameFields))
+  const playerInField = getPlayersInField(game.gameFields)
+
+  const newActivePlayer = playerInField.find((item) => item !== game.activePlayer)
+  if (!newActivePlayer) {
+      return game
+  }
+
+  const [player1, player2] = playerInField
+  Object.values(newOuterGameField).forEach((field) => {
+      (Object.keys(field.gameField) as Position[]).forEach((key) => {
+          if (field.gameField[key] === player1) {
+              field.gameField[key] = player2
+          } else if (field.gameField[key] === player2) {
+              field.gameField[key] = player1
+          }
+      })
+      if(field.fieldWinner === player1) {
+          field.fieldWinner = player2
+      } else if (field.fieldWinner === player2) {
+          field.fieldWinner = player1
+      }
+  })
+
+  const newGame: Game = {
+      gameFields: newOuterGameField,
+      activePlayer: newActivePlayer,
+      allowedOuterGameField: game.allowedOuterGameField,
+      winner: game.winner
+  }
+
+  return newGame
+}
+
 export {
   getFieldWinner,
   getGameWinner,
   handleSetPosition,
   getPlayersInField,
   getFixedGameRoom,
+  switchPlayerInField,
 }

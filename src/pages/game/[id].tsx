@@ -29,7 +29,7 @@ export default function Home() {
   return (
     <main className="w-full h-full">
       <div className="bg-gray-500 flex items-center justify-center w-full h-full md:p-12 p-4">
-        <ButtonRow />
+        <ButtonRow/>
         <Field
           setSnackbar={setSnackbarState}
           room={router.query.id as string}
