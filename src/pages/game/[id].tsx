@@ -1,19 +1,22 @@
 import { Field } from "@/components/field/Field";
 import { Snackbar } from "@/components/snackbar/Snackbar";
 import { SnackbarState } from "@/reducers/snackbarReducer";
-import { useRouter } from "next/router";
 import { useState } from "react";
+import { io } from "socket.io-client";
 import { v4 as uuid } from "uuid";
 
-import '../../app/globals.css';
 import { Footer } from "@/components/footer/Footer";
+import { ButtonRow } from "@/components/game/ButtonRow";
+import { useRouter } from "next/router";
+import '../../app/globals.css';
+
+
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL as string;
+export const socket = io(serverUrl);
 
 export default function Home() {
-  const router = useRouter()
 
-  function routeToHome() {
-    router.push(`/`);
-  }
+  const router = useRouter()
 
   const [snackbarState, setSnackbarState] = useState<SnackbarState>({
     show: false,
@@ -26,14 +29,7 @@ export default function Home() {
   return (
     <main className="w-full h-full">
       <div className="bg-gray-500 flex items-center justify-center w-full h-full md:p-12 p-4">
-        <div className="absolute top-0 left-0 p-4">
-          <button 
-            className="bg-gray-600 active:bg-gray-700 rounded-lg px-2"
-            onClick={routeToHome}
-          >
-            Home
-          </button>
-        </div>
+        <ButtonRow />
         <Field
           setSnackbar={setSnackbarState}
           room={router.query.id as string}

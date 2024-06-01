@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { GameField as GameFieldModel, OuterGameFieldPosition, Position } from "../../models/GameField";
 import { SetPositionData } from "../../models/SetPositionData";
 import { getAllowedOuterGameField } from "../../utils/getAllowedOuterGameField";
-import { socket } from "./Field";
+import { socket } from "../../pages/game/[id]";
 import { Player1Icon } from "./Player1Icon";
 import { Player2Icon } from "./Player2Icon";
 import { TicTacToeCell } from "./TicTacToeCell";

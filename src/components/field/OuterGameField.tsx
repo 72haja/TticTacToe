@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Game, GameField as GameFieldModel, OuterGameField as OuterGameFieldModel, OuterGameFieldPosition, Position } from "../../models/GameField";
 import { SetPositionData } from "../../models/SetPositionData";
 import { initOuterGameField } from "../../utils/initGameField";
-import { socket } from "./Field";
+import { socket } from "../../pages/game/[id]";
 import { GameField } from "./GameField";
 import { VictoryDialog } from "./VictoryDialog";
 import { SnackbarState } from "@/reducers/snackbarReducer";

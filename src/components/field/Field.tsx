@@ -1,4 +1,4 @@
-import { io } from "socket.io-client";
+import { socket } from "../../pages/game/[id]";
 import { GameMetaInfo } from "./GameMetaInfo";
 import { ResponsiveFieldWrapper } from "../responsiveFieldWrapper/ResponsiveFieldWrapper";
 import { OuterGameField } from "./OuterGameField";
@@ -7,9 +7,6 @@ import { PlayerData } from "../../models/PlayerData";
 import { useEffect, useState } from "react";
 import { SnackbarState } from "@/reducers/snackbarReducer";
 import { v4 as uuid } from "uuid";
-
-const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL as string;
-export const socket = io(serverUrl);
 
 type FieldProps = {
   setSnackbar: (snackbarState: SnackbarState) => void;

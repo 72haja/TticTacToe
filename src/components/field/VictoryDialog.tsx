@@ -1,5 +1,5 @@
 import { CilXCircle } from "../icons/icons";
-import { socket } from "./Field";
+import { socket } from "../../pages/game/[id]";
 import {Player1Icon} from "./Player1Icon";
 import {Player2Icon} from "./Player2Icon";
 
