@@ -30,7 +30,7 @@ export default function Home() {
 
   return (
     <main className="w-full h-full">
-      <div className="bg-gray-500 flex items-center justify-center w-full h-full p-12">
+      <div className="bg-gray-500 flex items-center justify-center w-full h-full md:p-12 p-4">
         <EnterGame
           newGame={newGame}
           enterGame={enterGame}

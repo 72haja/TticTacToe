@@ -25,7 +25,7 @@ export default function Home() {
 
   return (
     <main className="w-full h-full">
-      <div className="bg-gray-500 flex items-center justify-center w-full h-full p-12">
+      <div className="bg-gray-500 flex items-center justify-center w-full h-full md:p-12 p-4">
         <div className="absolute top-0 left-0 p-4">
           <button 
             className="bg-gray-600 active:bg-gray-700 rounded-lg px-2"
